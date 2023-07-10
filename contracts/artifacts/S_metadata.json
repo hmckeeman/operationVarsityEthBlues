@@ -1,0 +1,160 @@
+{
+	"compiler": {
+		"version": "0.8.18+commit.87f61d96"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_classSize",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_classRank",
+						"type": "uint256"
+					}
+				],
+				"name": "inputClassSizeAndRank",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_GPA",
+						"type": "uint256"
+					}
+				],
+				"name": "inputGPA",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string[]",
+						"name": "_classes",
+						"type": "string[]"
+					}
+				],
+				"name": "inputHighSchoolClasses",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_SATScore",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_ACTScore",
+						"type": "uint256"
+					}
+				],
+				"name": "inputSATACTScores",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string[]",
+						"name": "_activities",
+						"type": "string[]"
+					}
+				],
+				"name": "listExtracurricularActivities",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "students",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "GPA",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "classSize",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "classRank",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "SATScore",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "ACTScore",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/StudentApplication.sol": "S"
+		},
+		"evmVersion": "paris",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/StudentApplication.sol": {
+			"keccak256": "0x3f035af2a5f44c04c8a83badabed48e8f2fcdb8c6f79d4658011f3a9dc6df6ff",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://01b03b22bb084362c982d2295ab8103212aec11a7bfb6ca685b3a2bce468b397",
+				"dweb:/ipfs/QmU1zFGuAx757haqqJoC2UofqWmYEHfky1PcBedy1K8NFU"
+			]
+		}
+	},
+	"version": 1
+}
