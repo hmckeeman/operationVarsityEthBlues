@@ -6,6 +6,7 @@ contract AdmissionsOffice {
     address[] private acceptedStudents;
     address[] private approvedAdmissionsOfficers;
     uint256 private maxStudents;
+    mapping(address => address) private studentToOfficer; // Mapping to store assigned officer's address for each student
 
     receive() external payable {
         // No logic required in the fallback function
@@ -70,6 +71,9 @@ contract AdmissionsOffice {
         // Add the selected applicant to the array of accepted students
         acceptedStudents.push(selectedApplicant);
 
+        // Store the assigned officer's address for the selected applicant
+        studentToOfficer[selectedApplicant] = selectedOfficer;
+
         // Assign the selected officer's address to the applicant
         emit AdmissionsOfficerAssigned(selectedApplicant, selectedOfficer);
     }
@@ -87,4 +91,8 @@ contract AdmissionsOffice {
         uint256 seed = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender))) % length;
         return seed;
     }
+
+    function getAssignedOfficer(address applicant) public view returns (address) {
+        return studentToOfficer[applicant];
+}
 }

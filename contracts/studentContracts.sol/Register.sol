@@ -19,4 +19,8 @@ contract Register {
 
         AdmissionsOffice(admissionsOffice).addApplicant(msg.sender);
     }
+
+    function getAssignedOfficer() external view returns (address) {
+        return AdmissionsOffice(admissionsOffice).getAssignedOfficer(msg.sender);
+    }
 }
