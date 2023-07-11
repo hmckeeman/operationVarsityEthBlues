@@ -6,7 +6,7 @@ contract AdmissionsOffice {
     address[] private acceptedStudents;
     address[] private approvedAdmissionsOfficers;
     uint256 private maxStudents;
-    mapping(address => address) private studentToOfficer; // Mapping to store assigned officer's address for each student
+    mapping(address => address) private applicantToOfficer; // Mapping to store assigned officer's address for each student
 
     receive() external payable {
         // No logic required in the fallback function
@@ -55,7 +55,8 @@ contract AdmissionsOffice {
     }
 
     function assignAdmissionsOfficer() external onlyAdmissionsOfficer {
-        require(applicants.length > 0, "No applicants registered");
+        require(applicants.length > 0, "No applicants left to assign");
+        require(acceptedStudents.length < maxStudents, "Maximum number of students already reached");
 
         // Generate a random index for the applicant and admissions officer
         uint256 randomApplicantIndex = getRandomIndex(applicants.length);
@@ -65,18 +66,18 @@ contract AdmissionsOffice {
         address selectedApplicant = applicants[randomApplicantIndex];
         address selectedOfficer = approvedAdmissionsOfficers[randomOfficerIndex];
 
-        // Remove the selected applicant from the array of applicants
-        removeApplicant(randomApplicantIndex);
-
-        // Add the selected applicant to the array of accepted students
-        acceptedStudents.push(selectedApplicant);
+        // Check if the applicant has already been assigned an officer
+        require(applicantToOfficer[selectedApplicant] == address(0), "Applicant has already been assigned an officer");
 
         // Store the assigned officer's address for the selected applicant
-        studentToOfficer[selectedApplicant] = selectedOfficer;
+        applicantToOfficer[selectedApplicant] = selectedOfficer;
 
         // Assign the selected officer's address to the applicant
         emit AdmissionsOfficerAssigned(selectedApplicant, selectedOfficer);
     }
+
+
+
 
     function removeApplicant(uint256 index) internal {
         if (index >= applicants.length) return;
@@ -93,6 +94,6 @@ contract AdmissionsOffice {
     }
 
     function getAssignedOfficer(address applicant) public view returns (address) {
-        return studentToOfficer[applicant];
+        return applicantToOfficer[applicant];
 }
 }

@@ -5,9 +5,16 @@ import "../universityContracts/admissionsOffice.sol";
 
 contract Register {
     address payable public admissionsOffice;
+    address public applicant;
 
     constructor(address payable _admissionsOffice) {
         admissionsOffice = _admissionsOffice;
+        applicant = msg.sender;
+    }
+
+    modifier onlyApplicant() {
+        require(msg.sender == applicant, "Only the applicant can call this function");
+        _;
     }
 
     function registerWithAdmissionsOffice() external payable {
@@ -20,7 +27,8 @@ contract Register {
         AdmissionsOffice(admissionsOffice).addApplicant(msg.sender);
     }
 
-    function getAssignedOfficer() external view returns (address) {
-        return AdmissionsOffice(admissionsOffice).getAssignedOfficer(msg.sender);
+    function getAssignedOfficer() external view onlyApplicant returns (address) {
+        // Retrieve the assigned officer for the contract deployer (applicant)
+        return AdmissionsOffice(admissionsOffice).getAssignedOfficer(applicant);
     }
 }
