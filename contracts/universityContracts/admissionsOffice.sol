@@ -2,10 +2,12 @@
 pragma solidity ^0.8.0;
 
 contract AdmissionsOffice {
-    address[] private applicants;
+    address[] private unassignedApplicants;
+    address[] private assignedApplicants;
     address[] private acceptedStudents;
     address[] private approvedAdmissionsOfficers;
     uint256 private maxStudents;
+
     mapping(address => address) private applicantToOfficer; // Mapping to store assigned officer's address for each student
 
     receive() external payable {
@@ -34,8 +36,12 @@ contract AdmissionsOffice {
         return false;
     }
 
-    function getApplicants() external view returns (uint256, address[] memory) {
-        return (applicants.length, applicants);
+    function getUnassignedApplicants() external view returns (uint256, address[] memory) {
+        return (unassignedApplicants.length, unassignedApplicants);
+    }
+
+    function getAssignedApplicants() external view returns (uint256, address[] memory) {
+    return (assignedApplicants.length, assignedApplicants);
     }
 
     function getAcceptedStudents() external view returns (uint256, address[] memory) {
@@ -47,7 +53,7 @@ contract AdmissionsOffice {
     }
 
     function addApplicant(address applicant) external {
-        applicants.push(applicant);
+        unassignedApplicants.push(applicant);
     }
 
     function approveAdmissionsOfficer(address officer) external onlyAdmissionsOfficer {
@@ -55,37 +61,41 @@ contract AdmissionsOffice {
     }
 
     function assignAdmissionsOfficer() external onlyAdmissionsOfficer {
-        require(applicants.length > 0, "No applicants left to assign");
+        require(unassignedApplicants.length > 0, "No unassigned applicants left");
         require(acceptedStudents.length < maxStudents, "Maximum number of students already reached");
 
-        // Generate a random index for the applicant and admissions officer
-        uint256 randomApplicantIndex = getRandomIndex(applicants.length);
-        uint256 randomOfficerIndex = getRandomIndex(approvedAdmissionsOfficers.length);
+        // Iterate through admissions officers and assign a random unassigned applicant
+        for (uint256 i = 0; i < approvedAdmissionsOfficers.length; i++) {
+            if (unassignedApplicants.length == 0) {
+                // No unassigned applicants left, break the loop
+                break;
+            }
 
-        // Retrieve the randomly selected applicant and admissions officer
-        address selectedApplicant = applicants[randomApplicantIndex];
-        address selectedOfficer = approvedAdmissionsOfficers[randomOfficerIndex];
+            uint256 randomIndex = getRandomIndex(unassignedApplicants.length);
+            address selectedApplicant = unassignedApplicants[randomIndex];
 
-        // Check if the applicant has already been assigned an officer
-        require(applicantToOfficer[selectedApplicant] == address(0), "Applicant has already been assigned an officer");
+            // Check if the applicant has already been assigned an officer
+            if (applicantToOfficer[selectedApplicant] == address(0)) {
+                // Assign the selected applicant to the current officer
+                applicantToOfficer[selectedApplicant] = approvedAdmissionsOfficers[i];
+                assignedApplicants.push(selectedApplicant);
 
-        // Store the assigned officer's address for the selected applicant
-        applicantToOfficer[selectedApplicant] = selectedOfficer;
+                // Remove the assigned applicant from the unassigned applicants list
+                removeApplicant(randomIndex);
 
-        // Assign the selected officer's address to the applicant
-        emit AdmissionsOfficerAssigned(selectedApplicant, selectedOfficer);
+                // Emit the event
+                emit AdmissionsOfficerAssigned(selectedApplicant, approvedAdmissionsOfficers[i]);
+            }
+        }
     }
 
-
-
-
     function removeApplicant(uint256 index) internal {
-        if (index >= applicants.length) return;
+        if (index >= unassignedApplicants.length) return;
 
-        for (uint256 i = index; i < applicants.length - 1; i++) {
-            applicants[i] = applicants[i + 1];
+        for (uint256 i = index; i < unassignedApplicants.length - 1; i++) {
+            unassignedApplicants[i] = unassignedApplicants[i + 1];
         }
-        applicants.pop();
+        unassignedApplicants.pop();
     }
 
     function getRandomIndex(uint256 length) internal view returns (uint256) {
@@ -95,5 +105,5 @@ contract AdmissionsOffice {
 
     function getAssignedOfficer(address applicant) public view returns (address) {
         return applicantToOfficer[applicant];
-}
+    }
 }
