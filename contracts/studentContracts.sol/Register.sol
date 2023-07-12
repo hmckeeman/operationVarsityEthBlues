@@ -24,7 +24,7 @@ contract Register {
         (bool success, ) = admissionsOffice.call{value: 10 wei}("");
         require(success, "ETH transfer to AdmissionsOffice failed");
 
-        AdmissionsOffice(admissionsOffice).addApplicant(msg.sender);
+        AdmissionsOffice(admissionsOffice).addApplicant(applicant);
     }
 
     function getAssignedOfficer() external view onlyApplicant returns (address) {
