@@ -106,4 +106,24 @@ contract AdmissionsOffice {
     function getAssignedOfficer(address applicant) public view returns (address) {
         return applicantToOfficer[applicant];
     }
+
+    function getApplicantsForOfficer(address officer) external view returns (uint256, address[] memory) {
+        uint256 count = 0;
+        for (uint256 i = 0; i < assignedApplicants.length; i++) {
+            if (applicantToOfficer[assignedApplicants[i]] == officer) {
+                count++;
+            }
+        }
+
+        address[] memory applicants = new address[](count);
+        uint256 index = 0;
+        for (uint256 i = 0; i < assignedApplicants.length; i++) {
+            if (applicantToOfficer[assignedApplicants[i]] == officer) {
+                applicants[index] = assignedApplicants[i];
+                index++;
+            }
+        }
+
+        return (count, applicants);
+    }
 }
