@@ -7,8 +7,9 @@ contract AdmissionsOffice {
     address[] private acceptedStudents;
     address[] private approvedAdmissionsOfficers;
     uint256 private maxStudents;
+    uint256 private lastAssignedOfficerIndex;
 
-    mapping(address => address) private applicantToOfficer; // Mapping to store assigned officer's address for each student
+    mapping(address => address) private applicantToOfficer;
 
     receive() external payable {
         // No logic required in the fallback function
@@ -64,30 +65,59 @@ contract AdmissionsOffice {
         require(unassignedApplicants.length > 0, "No unassigned applicants left");
         require(acceptedStudents.length < maxStudents, "Maximum number of students already reached");
 
-        // Iterate through admissions officers and assign a random unassigned applicant
-        for (uint256 i = 0; i < approvedAdmissionsOfficers.length; i++) {
-            if (unassignedApplicants.length == 0) {
-                // No unassigned applicants left, break the loop
+        uint256 totalOfficers = approvedAdmissionsOfficers.length;
+        uint256 totalApplicants = unassignedApplicants.length;
+
+        // Calculate the number of applicants per officer
+        uint256 applicantsPerOfficer = totalApplicants / totalOfficers;
+        uint256 remainingApplicants = totalApplicants % totalOfficers;
+
+        // Assign applicants to the officers
+        for (uint256 i = 0; i < totalApplicants; i++) {
+            if (i >= totalOfficers) {
+                // All officers have been assigned, break the loop
                 break;
             }
 
-            uint256 randomIndex = getRandomIndex(unassignedApplicants.length);
-            address selectedApplicant = unassignedApplicants[randomIndex];
+            // Calculate the number of applicants to assign to this officer
+            uint256 count = applicantsPerOfficer;
+            if (remainingApplicants > 0) {
+                count += 1;
+                remainingApplicants -= 1;
+            }
 
-            // Check if the applicant has already been assigned an officer
-            if (applicantToOfficer[selectedApplicant] == address(0)) {
+            // Get the index of the next officer to assign
+            uint256 officerIndex = (lastAssignedOfficerIndex + 1) % totalOfficers;
+
+            // Assign applicants to the current officer
+            for (uint256 j = 0; j < count; j++) {
+                if (unassignedApplicants.length == 0) {
+                    // No unassigned applicants left, break the loop
+                    break;
+                }
+
+                uint256 randomIndex = getRandomIndex(unassignedApplicants.length);
+                address selectedApplicant = unassignedApplicants[randomIndex];
+
                 // Assign the selected applicant to the current officer
-                applicantToOfficer[selectedApplicant] = approvedAdmissionsOfficers[i];
+                applicantToOfficer[selectedApplicant] = approvedAdmissionsOfficers[officerIndex];
                 assignedApplicants.push(selectedApplicant);
 
                 // Remove the assigned applicant from the unassigned applicants list
                 removeApplicant(randomIndex);
 
                 // Emit the event
-                emit AdmissionsOfficerAssigned(selectedApplicant, approvedAdmissionsOfficers[i]);
+                emit AdmissionsOfficerAssigned(selectedApplicant, approvedAdmissionsOfficers[officerIndex]);
+
+                // Update the last assigned officer index
+                lastAssignedOfficerIndex = officerIndex;
+
+                // Increment the officer index for the next iteration
+                officerIndex = (officerIndex + 1) % totalOfficers;
             }
         }
     }
+
 
     function removeApplicant(uint256 index) internal {
         if (index >= unassignedApplicants.length) return;
