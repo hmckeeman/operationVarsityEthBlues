@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 contract Admissions {
+    address private deployer;
     address[] private unassignedApplicants;
     address[] private assignedApplicants;
     address[] private acceptedStudents;
@@ -14,17 +15,20 @@ contract Admissions {
     receive() external payable {
         // No logic required in the fallback function
     }
-
     constructor(uint256 _maxStudents) {
         maxStudents = _maxStudents;
-        // Approve deployer of admissionsOffice contract
-        approvedAdmissionsOfficers.push(msg.sender);
+        deployer = msg.sender;
+        // Note: The deployer is no longer automatically added as an approved officer
     }
 
+
+
+
     modifier onlyAdmissionsOfficer() {
-        require(isAdmissionsOfficer(msg.sender), "Only approved admissions officers can call this function");
-        _;
+        require(isAdmissionsOfficer(msg.sender) || msg.sender == deployer, "Only approved admissions officers or deployer can call this function");
+     _;
     }
+
 
     event AdmissionsOfficerAssigned(address indexed student, address indexed officer);
 
@@ -42,7 +46,7 @@ contract Admissions {
     }
 
     function getAssignedApplicants() external view returns (uint256, address[] memory) {
-    return (assignedApplicants.length, assignedApplicants);
+        return (assignedApplicants.length, assignedApplicants);
     }
 
     function getAcceptedStudents() external view returns (uint256, address[] memory) {
@@ -117,7 +121,6 @@ contract Admissions {
             }
         }
     }
-
 
     function removeApplicant(uint256 index) internal {
         if (index >= unassignedApplicants.length) return;
