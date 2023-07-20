@@ -3,36 +3,34 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "../universityContracts/admissionsOfficers.sol";
+import "../universityContracts/officers.sol";
 
-contract StudentApp is ERC721 {
+contract Application is ERC721 {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
     address public admissionsOfficer;
 
-    struct Application {
+    struct Applicant {
         string name;
         string university;
-        string ipfsHash;
+        string ipfsLink;
     }
 
-    mapping(uint256 => Application) private _applications;
+    mapping(uint256 => Applicant) private _applications;
 
     constructor(address _admissionsOfficer) ERC721("Application", "APP") {
         admissionsOfficer = _admissionsOfficer;
     }
 
-    function createApplication(string memory name, string memory university, string memory ipfsHash) external returns (uint256) {
+    function createApplication(string memory name, string memory university, string memory ipfsLink) external returns (uint256) {
         _tokenIds.increment();
         uint256 tokenId = _tokenIds.current();
 
         _mint(msg.sender, tokenId);
 
-        Application storage newApplication = _applications[tokenId];
-        newApplication.name = name;
-        newApplication.university = university;
-        newApplication.ipfsHash = ipfsHash;
+        Applicant memory newApplication = Applicant(name, university, ipfsLink);
+        _applications[tokenId] = newApplication;
 
         return tokenId;
     }
@@ -44,7 +42,7 @@ contract StudentApp is ERC721 {
         safeTransferFrom(msg.sender, admissionsOfficer, tokenId);
     }
 
-    function getApplication(uint256 tokenId) external view returns (Application memory) {
+    function getApplication(uint256 tokenId) external view returns (Applicant memory) {
         return _applications[tokenId];
     }
 }
