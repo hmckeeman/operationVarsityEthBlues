@@ -31,4 +31,9 @@ contract Register {
         // Retrieve the assigned officer for the contract deployer (applicant)
         return Admissions(admissionsOffice).getAssignedOfficer(applicant);
     }
+
+    function isApplicantRegistered() external view returns (bool) {
+        // Check if the applicant is registered (present in unassignedApplicants)
+        return Admissions(admissionsOffice).isApplicantRegistered(applicant);
+    }
 }

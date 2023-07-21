@@ -11,24 +11,22 @@ contract Admissions {
     uint256 private lastAssignedOfficerIndex;
 
     mapping(address => address) private applicantToOfficer;
+    mapping(address => bool) private isRegistered;
 
     receive() external payable {
         // No logic required in the fallback function
     }
+    
     constructor(uint256 _maxStudents) {
         maxStudents = _maxStudents;
         deployer = msg.sender;
         // Note: The deployer is no longer automatically added as an approved officer
     }
 
-
-
-
     modifier onlyAdmissionsOfficer() {
         require(isAdmissionsOfficer(msg.sender) || msg.sender == deployer, "Only approved admissions officers or deployer can call this function");
-     _;
+        _;
     }
-
 
     event AdmissionsOfficerAssigned(address indexed student, address indexed officer);
 
@@ -58,7 +56,23 @@ contract Admissions {
     }
 
     function addApplicant(address applicant) external {
+        require(!isRegistered[applicant], "Applicant already registered");
         unassignedApplicants.push(applicant);
+        isRegistered[applicant] = true;
+    }
+
+    function isApplicantRegistered(address applicant) public view returns (bool) {
+        for (uint256 i = 0; i < unassignedApplicants.length; i++) {
+            if (unassignedApplicants[i] == applicant) {
+                return true;
+            }
+        }
+        for (uint256 i = 0; i < assignedApplicants.length; i++) {
+            if (assignedApplicants[i] == applicant) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function approveAdmissionsOfficer(address officer) external onlyAdmissionsOfficer {
