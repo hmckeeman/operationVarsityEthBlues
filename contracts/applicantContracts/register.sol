@@ -10,21 +10,14 @@ contract Register {
     constructor(address payable _admissions) {
         admissionsOffice = _admissions;
         applicant = msg.sender;
+
+        // Add the applicant to the unassignedApplicants array in the Admissions contract
+        Admissions(admissionsOffice).addApplicant(applicant);
     }
 
     modifier onlyApplicant() {
         require(msg.sender == applicant, "Only the applicant can call this function");
         _;
-    }
-
-    function registerWithAdmissions() external payable {
-        require(admissionsOffice != address(0), "AdmissionsOffice address not set");
-        require(msg.value >= 10 wei, "Insufficient payment");
-
-        (bool success, ) = admissionsOffice.call{value: 10 wei}("");
-        require(success, "ETH transfer to AdmissionsOffice failed");
-
-        Admissions(admissionsOffice).addApplicant(applicant);
     }
 
     function getAssignedOfficer() external view onlyApplicant returns (address) {
@@ -33,7 +26,7 @@ contract Register {
     }
 
     function isApplicantRegistered() external view returns (bool) {
-        // Check if the applicant is registered (present in unassignedApplicants)
+        // Check if the applicant is registered (present in either unassignedApplicants or assignedApplicants)
         return Admissions(admissionsOffice).isApplicantRegistered(applicant);
     }
 }

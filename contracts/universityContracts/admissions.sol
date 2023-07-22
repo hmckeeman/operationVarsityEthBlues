@@ -13,10 +13,6 @@ contract Admissions {
     mapping(address => address) private applicantToOfficer;
     mapping(address => bool) private isRegistered;
 
-    receive() external payable {
-        // No logic required in the fallback function
-    }
-    
     constructor(uint256 _maxStudents) {
         maxStudents = _maxStudents;
         deployer = msg.sender;
@@ -62,17 +58,7 @@ contract Admissions {
     }
 
     function isApplicantRegistered(address applicant) public view returns (bool) {
-        for (uint256 i = 0; i < unassignedApplicants.length; i++) {
-            if (unassignedApplicants[i] == applicant) {
-                return true;
-            }
-        }
-        for (uint256 i = 0; i < assignedApplicants.length; i++) {
-            if (assignedApplicants[i] == applicant) {
-                return true;
-            }
-        }
-        return false;
+        return isRegistered[applicant] || applicantToOfficer[applicant] != address(0);
     }
 
     function approveAdmissionsOfficer(address officer) external onlyAdmissionsOfficer {
