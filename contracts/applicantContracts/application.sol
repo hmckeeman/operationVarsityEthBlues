@@ -45,4 +45,21 @@ contract Application is ERC721 {
     function getApplication(uint256 tokenId) external view returns (Applicant memory) {
         return _applications[tokenId];
     }
+
+    function viewApplicationWithDecision(uint256 tokenId, address officerContract) external view returns (
+        string memory, string memory, string memory, bool, string memory
+    ) {
+        require(ownerOf(tokenId) == msg.sender, "You are not the owner of this NFT application");
+        Officer officer = Officer(officerContract);
+        (string memory name, string memory university, string memory ipfsLink) = 
+            (_applications[tokenId].name, _applications[tokenId].university, _applications[tokenId].ipfsLink);
+        (, , , bool decisionMade, string memory decision) = officer.viewApplication(ownerOf(tokenId));
+        return (
+            name,
+            university,
+            ipfsLink,
+            decisionMade,
+            decision
+        );
+    }
 }
