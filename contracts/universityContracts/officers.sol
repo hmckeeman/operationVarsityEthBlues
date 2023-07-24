@@ -9,6 +9,8 @@ contract Officer is IERC721Receiver {
         string name;
         string university;
         string ipfsLink;
+        bool decisionMade;
+        string decision;
     }
 
     address private officer;
@@ -39,7 +41,7 @@ contract Officer is IERC721Receiver {
         Application.Applicant memory applicant = applicationContract.getApplication(tokenId);
 
         // Store the application data
-        applications[from] = ApplicantData(applicant.name, applicant.university, applicant.ipfsLink);
+        applications[from] = ApplicantData(applicant.name, applicant.university, applicant.ipfsLink, false, "");
 
         totalAssignedApplicants++;
         return this.onERC721Received.selector;
@@ -54,17 +56,27 @@ contract Officer is IERC721Receiver {
         return result;
     }
 
-    function viewApplication(address applicant) onlyOfficer external view returns (string memory, string memory, string memory) {
+    function viewApplication(address applicant) onlyOfficer external view returns (string memory, string memory, string memory, bool, string memory) {
         ApplicantData storage applicantData = applications[applicant];
         if (bytes(applicantData.name).length != 0) {
             return (
                 applicantData.name,
                 applicantData.university,
-                applicantData.ipfsLink
+                applicantData.ipfsLink,
+                applicantData.decisionMade,
+                applicantData.decision
             );
         } else {
-            return ("", "", "Application not received");
+            return ("", "", "Application not received", false, "");
         }
+    }
+
+    function makeDecision(address applicant, string calldata decision) onlyOfficer external {
+        require(bytes(decision).length > 0, "Decision cannot be empty");
+        ApplicantData storage applicantData = applications[applicant];
+        require(!applicantData.decisionMade, "Decision already made for this applicant");
+        applicantData.decisionMade = true;
+        applicantData.decision = decision;
     }
 }
 
