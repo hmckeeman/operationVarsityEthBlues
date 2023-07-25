@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 import "../universityContracts/admissions.sol";
 
 contract Register {
-    address payable public admissionsOffice;
+    address public admissionsOffice;
     address public applicant;
 
-    constructor(address payable _admissions) {
+    constructor(address _admissions) {
         admissionsOffice = _admissions;
         applicant = msg.sender;
 
