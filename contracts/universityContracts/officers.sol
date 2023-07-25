@@ -3,6 +3,9 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "../applicantContracts/application.sol";
+import "../universityContracts/admissions.sol"; // Import the Admissions contract
+import "../applicantContracts/register.sol"; // Import the Register contract
+
 
 contract Officer is IERC721Receiver {
     struct ApplicantData {
@@ -18,6 +21,7 @@ contract Officer is IERC721Receiver {
     uint256 private totalAssignedApplicants;
     mapping(uint256 => address) private tokenIdToApplicant;
     mapping(address => ApplicantData) private applications;
+    mapping(address => address) private registerToApplicant; // Mapping to store the applicant's address based on their Register contract address
 
     constructor(address _admissionsContract) {
         officer = msg.sender;
@@ -42,13 +46,15 @@ contract Officer is IERC721Receiver {
 
         // Store the application data
         applications[from] = ApplicantData(applicant.name, applicant.university, applicant.ipfsLink, false, "");
+        // Store the mapping of Register contract address to applicant address
+        registerToApplicant[from] = from;
 
         totalAssignedApplicants++;
         return this.onERC721Received.selector;
     }
 
-    function getAssignedApplicants() onlyOfficer external view returns(address[] memory) {
-        (uint256 count, address[] memory assignedApplicants) = IAdmissions(admissionsContract).getAssignedApplicants();
+    function getAssignedApplicants() onlyOfficer external view returns (address[] memory) {
+        (uint256 count, address[] memory assignedApplicants) = Admissions(admissionsContract).getAssignedApplicants();
         address[] memory result = new address[](count);
         for (uint256 i = 0; i < count; i++) {
             result[i] = assignedApplicants[i];
@@ -77,9 +83,10 @@ contract Officer is IERC721Receiver {
         require(!applicantData.decisionMade, "Decision already made for this applicant");
         applicantData.decisionMade = true;
         applicantData.decision = decision;
-    }
-}
 
-interface IAdmissions {
-    function getAssignedApplicants() external view returns (uint256, address[] memory);
+        // Relay the decision back to the applicant's Register contract
+        address registerAddress = registerToApplicant[applicant];
+        require(registerAddress != address(0), "Register contract not found for the applicant");
+        Register(registerAddress).receiveDecision(decision);
+    }
 }
