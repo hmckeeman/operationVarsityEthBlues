@@ -6,27 +6,33 @@ import "../universityContracts/admissions.sol";
 contract Register {
     address public admissionsOffice;
     address public applicant;
+    address public registerAddress;
+    bool public decisionReceived; // New variable to track decision status
+    string public admissionDecision; // New variable to store the admission decision
 
     constructor(address _admissions) {
         admissionsOffice = _admissions;
-        applicant = msg.sender;
+        applicant = address(this);
 
-        // Add the applicant to the unassignedApplicants array in the Admissions contract
         Admissions(admissionsOffice).addApplicant(applicant);
     }
 
     modifier onlyApplicant() {
-        require(msg.sender == applicant, "Only the applicant can call this function");
+        require(msg.sender == registerAddress, "Only the applicant can call this function");
         _;
     }
 
     function getAssignedOfficer() external view onlyApplicant returns (address) {
-        // Retrieve the assigned officer for the contract deployer (applicant)
-        return Admissions(admissionsOffice).getAssignedOfficer(applicant);
+        return Admissions(admissionsOffice).getAssignedOfficer(registerAddress);
     }
 
     function isApplicantRegistered() external view returns (bool) {
-        // Check if the applicant is registered (present in either unassignedApplicants or assignedApplicants)
-        return Admissions(admissionsOffice).isApplicantRegistered(applicant);
+        return Admissions(admissionsOffice).isApplicantRegistered(registerAddress);
+    }
+
+    function receiveDecision(string calldata decision) external onlyApplicant {
+        require(!decisionReceived, "Decision has already been received");
+        decisionReceived = true;
+        admissionDecision = decision;
     }
 }
