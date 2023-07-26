@@ -11,13 +11,13 @@ contract Application is ERC721 {
 
     address public admissionsOfficer;
 
-    struct Applicant {
+    struct ApplicantData {
         string name;
         string university;
         string ipfsLink;
     }
 
-    mapping(uint256 => Applicant) private _applications;
+    mapping(uint256 => ApplicantData) private _applications;
 
     constructor(address _admissionsOfficer) ERC721("Application", "APP") {
         admissionsOfficer = _admissionsOfficer;
@@ -29,7 +29,7 @@ contract Application is ERC721 {
 
         _mint(msg.sender, tokenId);
 
-        Applicant memory newApplication = Applicant(name, university, ipfsLink);
+        ApplicantData memory newApplication = ApplicantData(name, university, ipfsLink);
         _applications[tokenId] = newApplication;
 
         return tokenId;
@@ -42,24 +42,8 @@ contract Application is ERC721 {
         safeTransferFrom(msg.sender, admissionsOfficer, tokenId);
     }
 
-    function getApplication(uint256 tokenId) external view returns (Applicant memory) {
+    function getApplication(uint256 tokenId) external view returns (ApplicantData memory) {
         return _applications[tokenId];
     }
 
-    function viewApplicationWithDecision(uint256 tokenId, address officerContract) external view returns (
-        string memory, string memory, string memory, bool, string memory
-    ) {
-        require(ownerOf(tokenId) == msg.sender, "You are not the owner of this NFT application");
-        Officer officer = Officer(officerContract);
-        (string memory name, string memory university, string memory ipfsLink) = 
-            (_applications[tokenId].name, _applications[tokenId].university, _applications[tokenId].ipfsLink);
-        (, , , bool decisionMade, string memory decision) = officer.viewApplication(ownerOf(tokenId));
-        return (
-            name,
-            university,
-            ipfsLink,
-            decisionMade,
-            decision
-        );
-    }
 }
