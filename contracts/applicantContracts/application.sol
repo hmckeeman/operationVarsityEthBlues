@@ -3,13 +3,11 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "../universityContracts/officers.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Application is ERC721 {
+contract Application is ERC721, Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
-
-    address public admissionsOfficer;
 
     struct ApplicantData {
         string name;
@@ -19,31 +17,26 @@ contract Application is ERC721 {
 
     mapping(uint256 => ApplicantData) private _applications;
 
-    constructor(address _admissionsOfficer) ERC721("Application", "APP") {
-        admissionsOfficer = _admissionsOfficer;
-    }
+    constructor() ERC721("Application", "APP") {}
 
-    function createApplication(string memory name, string memory university, string memory ipfsLink) external returns (uint256) {
-        _tokenIds.increment();
+    function createApplication(string memory name, string memory university, string memory ipfsLink) external {
         uint256 tokenId = _tokenIds.current();
-
         _mint(msg.sender, tokenId);
+        _tokenIds.increment();
 
         ApplicantData memory newApplication = ApplicantData(name, university, ipfsLink);
         _applications[tokenId] = newApplication;
-
-        return tokenId;
     }
 
-    function transferApplicationToAdmissionsOfficer(uint256 tokenId) external {
-        require(ownerOf(tokenId) == msg.sender, "You are not the owner of this NFT application");
-        require(admissionsOfficer != address(0), "Admissions officer address is not set");
+    function transferApplicationToOfficerContract(address officerContract, uint256 tokenId) external {
+        // Make sure the officer contract is approved to receive the NFT
+        approve(officerContract, tokenId);
 
-        safeTransferFrom(msg.sender, admissionsOfficer, tokenId);
+        // Transfer the NFT to the officer contract
+        safeTransferFrom(msg.sender, officerContract, tokenId);
     }
 
     function getApplication(uint256 tokenId) external view returns (ApplicantData memory) {
         return _applications[tokenId];
     }
-
 }
