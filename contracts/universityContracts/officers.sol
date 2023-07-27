@@ -3,9 +3,8 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "../applicantContracts/application.sol";
-import "../universityContracts/admissions.sol"; // Import the Admissions contract
-import "../applicantContracts/register.sol"; // Import the Register contract
-
+import "../universityContracts/admissions.sol";
+import "../applicantContracts/applicant.sol"; // Import the Applicant contract
 
 contract Officer is IERC721Receiver {
     struct ApplicantData {
@@ -21,33 +20,23 @@ contract Officer is IERC721Receiver {
     uint256 private totalAssignedApplicants;
     mapping(uint256 => address) private tokenIdToApplicant;
     mapping(address => ApplicantData) private applications;
-    mapping(address => address) private registerToApplicant; // Mapping to store the applicant's address based on their Register contract address
+    mapping(address => uint256) private applicantContractToTokenId; // Mapping to store the token ID based on the applicant contract address
 
-    constructor(address _admissionsContract) {
-        officer = msg.sender;
-        admissionsContract = _admissionsContract;
-    }
 
     modifier onlyOfficer() {
         require(msg.sender == officer, "Only the officer can call this function");
         _;
     }
 
-    function onERC721Received(address, address from, uint256 tokenId, bytes calldata) 
-        override external returns (bytes4) {
-
+    function onERC721Received(address, address from, uint256 tokenId, bytes calldata) external override returns (bytes4) {
         require(totalAssignedApplicants < type(uint256).max, "Maximum number of applicants reached");
         tokenIdToApplicant[tokenId] = from;
 
-        // Get the application contract instance
         Application applicationContract = Application(msg.sender);
-        // Get the application details using the tokenId
-        Application.Applicant memory applicant = applicationContract.getApplication(tokenId);
+        Application.ApplicantData memory applicant = applicationContract.getApplication(tokenId);
 
-        // Store the application data
         applications[from] = ApplicantData(applicant.name, applicant.university, applicant.ipfsLink, false, "");
-        // Store the mapping of Register contract address to applicant address
-        registerToApplicant[from] = from;
+        applicantContractToTokenId[from] = tokenId; // Save the token ID based on the applicant contract address
 
         totalAssignedApplicants++;
         return this.onERC721Received.selector;
@@ -62,7 +51,9 @@ contract Officer is IERC721Receiver {
         return result;
     }
 
-    function viewApplication(address applicant) onlyOfficer external view returns (string memory, string memory, string memory, bool, string memory) {
+    function viewApplication(address applicantContract) onlyOfficer external view returns (string memory, string memory, string memory, bool, string memory) {
+        uint256 tokenId = applicantContractToTokenId[applicantContract]; // Get the token ID from the mapping
+        address applicant = tokenIdToApplicant[tokenId]; // Get the applicant's address from the token ID mapping
         ApplicantData storage applicantData = applications[applicant];
         if (bytes(applicantData.name).length != 0) {
             return (
@@ -84,9 +75,10 @@ contract Officer is IERC721Receiver {
         applicantData.decisionMade = true;
         applicantData.decision = decision;
 
-        // Relay the decision back to the applicant's Register contract
-        address registerAddress = registerToApplicant[applicant];
-        require(registerAddress != address(0), "Register contract not found for the applicant");
-        Register(registerAddress).receiveDecision(decision);
+        uint256 tokenId = applicantContractToTokenId[applicant];
+        require(tokenId != 0, "Token ID not found for the applicant");
+        address applicationContractAddress = tokenIdToApplicant[tokenId];
+        require(applicationContractAddress != address(0), "Applicant contract not found for the applicant");
+        Applicant(applicationContractAddress).receiveDecision(decision); // Call the receiveDecision function of the Applicant contract
     }
 }
