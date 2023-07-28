@@ -21,7 +21,10 @@ contract Officer is IERC721Receiver {
     mapping(uint256 => address) private tokenIdToApplicant;
     mapping(address => ApplicantData) private applications;
     mapping(address => uint256) private applicantContractToTokenId; // Mapping to store the token ID based on the applicant contract address
-
+    constructor(address _admissionsContract) {
+        officer = msg.sender;
+        admissionsContract = _admissionsContract;
+    }
 
     modifier onlyOfficer() {
         require(msg.sender == officer, "Only the officer can call this function");
