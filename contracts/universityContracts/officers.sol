@@ -21,6 +21,7 @@ contract Officer is IERC721Receiver {
     mapping(uint256 => address) private tokenIdToApplicant;
     mapping(address => ApplicantData) private applications;
     mapping(address => uint256) private applicantContractToTokenId; // Mapping to store the token ID based on the applicant contract address
+
     constructor(address _admissionsContract) {
         officer = msg.sender;
         admissionsContract = _admissionsContract;
@@ -46,12 +47,8 @@ contract Officer is IERC721Receiver {
     }
 
     function getAssignedApplicants() onlyOfficer external view returns (address[] memory) {
-        (uint256 count, address[] memory assignedApplicants) = Admissions(admissionsContract).getAssignedApplicants();
-        address[] memory result = new address[](count);
-        for (uint256 i = 0; i < count; i++) {
-            result[i] = assignedApplicants[i];
-        }
-        return result;
+        address[] memory applicantsForOfficer = Admissions(admissionsContract).getApplicantsForOfficer(address(this));
+        return applicantsForOfficer;
     }
 
     function viewApplication(address applicantContract) onlyOfficer external view returns (string memory, string memory, string memory, bool, string memory) {
