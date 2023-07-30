@@ -52,6 +52,8 @@ contract Officer is IERC721Receiver {
     }
 
     function viewApplication(address applicantContract) onlyOfficer external view returns (string memory, string memory, string memory, bool, string memory) {
+        require(isApplicantAssigned(applicantContract), "You can only view applications of applicants you have been assigned to");
+
         uint256 tokenId = applicantContractToTokenId[applicantContract]; // Get the token ID from the mapping
         address applicant = tokenIdToApplicant[tokenId]; // Get the applicant's address from the token ID mapping
         ApplicantData storage applicantData = applications[applicant];
@@ -69,6 +71,7 @@ contract Officer is IERC721Receiver {
     }
 
     function makeDecision(address applicant, string calldata decision) onlyOfficer external {
+        require(isApplicantAssigned(applicant), "You can only approve applications of applicants you have been assigned to");
         require(bytes(decision).length > 0, "Decision cannot be empty");
         ApplicantData storage applicantData = applications[applicant];
         require(!applicantData.decisionMade, "Decision already made for this applicant");
@@ -80,5 +83,15 @@ contract Officer is IERC721Receiver {
         address applicationContractAddress = tokenIdToApplicant[tokenId];
         require(applicationContractAddress != address(0), "Applicant contract not found for the applicant");
         Applicant(applicationContractAddress).receiveDecision(decision); // Call the receiveDecision function of the Applicant contract
+    }
+
+    function isApplicantAssigned(address applicantContract) internal view returns (bool) {
+        address[] memory applicantsForOfficer = Admissions(admissionsContract).getApplicantsForOfficer(address(this));
+        for (uint256 i = 0; i < applicantsForOfficer.length; i++) {
+            if (applicantsForOfficer[i] == applicantContract) {
+                return true;
+            }
+        }
+        return false;
     }
 }
