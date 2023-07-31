@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 contract Admissions {
+
     address private deployer;
     address[] private unassignedApplicants;
     address[] private assignedApplicants;
@@ -11,7 +12,7 @@ contract Admissions {
     uint256 private lastAssignedOfficerIndex;
 
     mapping(address => address) private applicantToOfficer;
-    mapping(address => bool) private isRegistered;
+    mapping(address => uint8) private registeredAddresses; // Combined mapping to track registered addresses and their roles
 
     constructor(uint256 _maxStudents) {
         maxStudents = _maxStudents;
@@ -27,12 +28,11 @@ contract Admissions {
     event AdmissionsOfficerAssigned(address indexed student, address indexed officer);
 
     function isAdmissionsOfficer(address officer) public view returns (bool) {
-        for (uint256 i = 0; i < approvedAdmissionsOfficers.length; i++) {
-            if (approvedAdmissionsOfficers[i] == officer) {
-                return true;
-            }
-        }
-        return false;
+        return registeredAddresses[officer] == 2; // Check if the address has the role of an admissions officer (value 2)
+    }
+
+    function isApplicant(address account) public view returns (bool) {
+        return registeredAddresses[account] == 1; // Check if the address has the role of an applicant (value 1)
     }
 
     function getUnassignedApplicants() external view returns (uint256, address[] memory) {
@@ -52,17 +52,15 @@ contract Admissions {
     }
 
     function addApplicant(address applicant) external {
-        require(!isRegistered[applicant], "Applicant already registered");
+        require(registeredAddresses[applicant] == 0, "Address is already registered");
         unassignedApplicants.push(applicant);
-        isRegistered[applicant] = true;
-    }
-
-    function isApplicantRegistered(address applicant) public view returns (bool) {
-        return isRegistered[applicant] || applicantToOfficer[applicant] != address(0);
+        registeredAddresses[applicant] = 1; // Set the role of the address to applicant (value 1)
     }
 
     function approveAdmissionsOfficer(address officer) external onlyAdmissionsOfficer {
+        require(registeredAddresses[officer] == 0, "Address is already registered");
         approvedAdmissionsOfficers.push(officer);
+        registeredAddresses[officer] = 2; // Set the role of the address to admissions officer (value 2)
     }
 
     function assignAdmissionsOfficer() external onlyAdmissionsOfficer {
@@ -136,11 +134,12 @@ contract Admissions {
         return seed;
     }
 
-    function getAssignedOfficer(address applicant) public view returns (address) {
+    function getAssignedOfficer(address applicant) external view returns (address) {
         return applicantToOfficer[applicant];
     }
 
-    function getApplicantsForOfficer(address officer) external view returns (uint256, address[] memory) {
+
+    function getApplicantsForOfficer(address officer) external view returns (address[] memory) {
         uint256 count = 0;
         for (uint256 i = 0; i < assignedApplicants.length; i++) {
             if (applicantToOfficer[assignedApplicants[i]] == officer) {
@@ -157,6 +156,6 @@ contract Admissions {
             }
         }
 
-        return (count, applicants);
+        return applicants;
     }
 }
