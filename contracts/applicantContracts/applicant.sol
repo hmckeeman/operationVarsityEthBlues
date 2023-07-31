@@ -28,10 +28,10 @@ contract Applicant {
     }
 
     function isApplicantRegistered() external view onlyOwner returns (bool) {
-        return Admissions(admissionsOffice).isApplicantRegistered(applicant);
+        return Admissions(admissionsOffice).isApplicant(applicant);
     }
 
-    function receiveDecision(string calldata decision) external onlyOwner {
+    function receiveDecision(string calldata decision) onlyOwner external onlyOwner {
         require(!decisionReceived, "Decision has already been received");
         decisionReceived = true;
         admissionDecision = decision;
