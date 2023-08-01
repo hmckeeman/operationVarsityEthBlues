@@ -9,6 +9,7 @@ contract Applicant {
     bool public decisionReceived; // New variable to track decision status
     string public admissionDecision; // New variable to store the admission decision
     address private contractDeployer; // State variable to store the contract deployer's address
+    address private officerContract; // New variable to store the officer contract address
 
     modifier onlyOwner() {
         require(msg.sender == contractDeployer, "Only the contract deployer can call this function");
@@ -31,9 +32,14 @@ contract Applicant {
         return Admissions(admissionsOffice).isApplicant(applicant);
     }
 
-    function receiveDecision(string calldata decision) onlyOwner external onlyOwner {
+    function receiveDecision(string calldata decision) external {
+        require(msg.sender == officerContract, "Only the approved officer can call this function");
         require(!decisionReceived, "Decision has already been received");
         decisionReceived = true;
         admissionDecision = decision;
+    }
+
+    function grantOfficerApproval(address _officerContract) external onlyOwner {
+        officerContract = _officerContract;
     }
 }
