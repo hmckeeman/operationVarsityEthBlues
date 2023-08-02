@@ -69,7 +69,8 @@ contract Officer is IERC721Receiver {
         applicantData.decisionMade = true;
         applicantData.decision = decision;
 
-        Applicant(applicantContract).receiveDecision(decision); // Call the receiveDecision function of the Applicant contract
+        // Update the decision in the applicantData directly from the receiveDecision function
+        applicantData.decision = Applicant(applicantContract).receiveDecision();
     }
 
     function isApplicantAssigned(address applicantContract) internal view returns (bool) {
