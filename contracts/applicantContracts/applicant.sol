@@ -11,8 +11,9 @@ contract Applicant {
     address private contractDeployer; // State variable to store the contract deployer's address
     address private officerContract; // New variable to store the officer contract address
 
-    modifier onlyOwner() {
-        require(msg.sender == contractDeployer, "Only the contract deployer can call this function");
+    // Modifier to allow either the contract deployer or the approved officer to call the function
+    modifier onlyAuthorized() {
+        require(msg.sender == contractDeployer || msg.sender == officerContract, "Only the contract deployer or the approved officer can call this function");
         _;
     }
 
@@ -24,22 +25,20 @@ contract Applicant {
         Admissions(admissionsOffice).addApplicant(applicant);
     }
 
-    function getAssignedOfficer() external view onlyOwner returns (address) {
+    function getAssignedOfficer() external view onlyAuthorized returns (address) {
         return Admissions(admissionsOffice).getAssignedOfficer(applicant);
     }
 
-    function isApplicantRegistered() external view onlyOwner returns (bool) {
+    function isApplicantRegistered() external view onlyAuthorized returns (bool) {
         return Admissions(admissionsOffice).isApplicant(applicant);
     }
 
-    function receiveDecision(string calldata decision) external {
-        require(msg.sender == officerContract, "Only the approved officer can call this function");
-        require(!decisionReceived, "Decision has already been received");
-        decisionReceived = true;
-        admissionDecision = decision;
-    }
+    function receiveDecision() external view onlyAuthorized returns (string memory) {
+        //require(decisionReceived, "Decision has not been received yet");
+        return admissionDecision;
+    }   
 
-    function grantOfficerApproval(address _officerContract) external onlyOwner {
+    function grantOfficerApproval(address _officerContract) external onlyAuthorized {
         officerContract = _officerContract;
     }
 }
