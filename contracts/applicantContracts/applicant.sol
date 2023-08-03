@@ -33,10 +33,11 @@ contract Applicant {
         return Admissions(admissionsOffice).isApplicant(applicant);
     }
 
-    function receiveDecision() external view onlyAuthorized returns (string memory) {
-        //require(decisionReceived, "Decision has not been received yet");
-        return admissionDecision;
-    }   
+    function receiveDecision(string calldata decision) external onlyAuthorized {
+        require(!decisionReceived, "Decision has already been received");
+        decisionReceived = true;
+        admissionDecision = decision;
+    }
 
     function grantOfficerApproval(address _officerContract) external onlyAuthorized {
         officerContract = _officerContract;
