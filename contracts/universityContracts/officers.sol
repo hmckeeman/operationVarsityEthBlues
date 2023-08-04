@@ -21,6 +21,12 @@ contract Officer is IERC721Receiver {
     address private deployer; // New variable to store the deployer's address
     mapping(address => ApplicantData) private applicantsData;
 
+    // Modifier to allow only the contract deployer to call the standardized functions
+    modifier onlyAuthorized() {
+        require(msg.sender == deployer, "Only the contract deployer can call this function");
+        _;
+    }
+
     constructor(address _admissionsContract) {
         deployer = msg.sender; // Set the deployer address when deploying the contract
         admissionsContract = _admissionsContract;
@@ -60,7 +66,7 @@ contract Officer is IERC721Receiver {
         }
     }
 
-    function makeDecision(address applicantContract, string calldata decision) external {
+    function makeDecision(address applicantContract, string memory decision) internal {
         require(isApplicantAssigned(applicantContract), "You can only approve applications of applicants you have been assigned to");
         require(bytes(decision).length > 0, "Decision cannot be empty");
 
@@ -82,4 +88,18 @@ contract Officer is IERC721Receiver {
         }
         return false;
     }
+
+    // Standardized functions for making admission decisions
+    function acceptApplicant(address applicantContract) external onlyAuthorized {
+        makeDecision(applicantContract, "accepted");
+    }
+
+    function denyApplicant(address applicantContract) external onlyAuthorized {
+        makeDecision(applicantContract, "denied");
+    }
+
+    function waitlistApplicant(address applicantContract) external onlyAuthorized {
+        makeDecision(applicantContract, "waitlisted");
+    }
+
 }
