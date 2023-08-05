@@ -17,13 +17,14 @@ contract Application is ERC721 {
     }
 
     mapping(uint256 => ApplicantData) private _applications;
+    address private deployer;
     address private applicantContract; // Address of the applicant contract
     address private admissionsContract; // Address of the admissions contract
 
     constructor(address _applicantContract, address _admissionsContract) ERC721("Application", "APP") {
+        deployer = msg.sender; // Set the contract deployer address
         applicantContract = _applicantContract;
         admissionsContract = _admissionsContract;
-
     }
 
     // Override _msgSender() to return the applicant contract address as the sender
@@ -44,10 +45,13 @@ contract Application is ERC721 {
         _applications[tokenId] = newApplication;
     }
 
-
     function transferApplicationToOfficerContract(address officerContract, uint256 tokenId) external {
-        //require(ownerOf(tokenId) == applicantContract, "You can only transfer your own application");
-        
+        require(_exists(tokenId), "Application not found");
+
+        // Ensure that the caller is either the contract deployer or the authorized applicant
+        address owner = ownerOf(tokenId);
+        require(owner == deployer || owner == applicantContract, "Only the contract deployer or authorized applicant contract can call this function");
+
         address assignedOfficer = Admissions(admissionsContract).getAssignedOfficer(applicantContract);
         require(assignedOfficer == officerContract, "You can only send your application to your assigned officer");
 
