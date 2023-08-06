@@ -4,8 +4,7 @@ pragma solidity ^0.8.0;
 import "../universityContracts/admissions.sol";
 
 contract Applicant {
-    address private deployer;
-    address public admissionsContract;
+    address public admissionsOffice;
     address public applicant;
     bool public decisionReceived; // New variable to track decision status
     string public admissionDecision; // New variable to store the admission decision
@@ -20,21 +19,18 @@ contract Applicant {
 
     constructor(address _admissions) {
         contractDeployer = msg.sender; // Set the contract deployer's address
-        admissionsContract = _admissions;
+        admissionsOffice = _admissions;
         applicant = address(this); // Set applicant to the address of the caller (the deployer of the contract)
 
-        Admissions(admissionsContract).addApplicant(applicant);
+        Admissions(admissionsOffice).addApplicant(applicant);
     }
 
-    // Event to notify the officer approval
-    event OfficerApprovalGranted(address officerContract);
-
     function getAssignedOfficer() external view onlyAuthorized returns (address) {
-        return Admissions(admissionsContract).getAssignedOfficer(applicant);
+        return Admissions(admissionsOffice).getAssignedOfficer(applicant);
     }
 
     function isApplicantRegistered() external view onlyAuthorized returns (bool) {
-        return Admissions(admissionsContract).isApplicant(applicant);
+        return Admissions(admissionsOffice).isApplicant(applicant);
     }
 
     function receiveDecision(string calldata decision) external onlyAuthorized {
@@ -43,9 +39,7 @@ contract Applicant {
         admissionDecision = decision;
     }
 
-    function grantOfficerApproval(address _officerContract) external {
+    function grantOfficerApproval(address _officerContract) external onlyAuthorized {
         officerContract = _officerContract;
-        emit OfficerApprovalGranted(_officerContract);
     }
-
 }
