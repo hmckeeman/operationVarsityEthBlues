@@ -44,10 +44,10 @@ contract Officer is IERC721Receiver {
         return this.onERC721Received.selector;
     }
 
-    function getAssignedApplicants() external view returns (address[] memory) {
-        address[] memory applicantsForOfficer = Admissions(admissionsContract).getApplicantsForOfficer(address(this));
-        return applicantsForOfficer;
+    function getAssignedApplicants() external view returns (address[] memory, uint256) {
+        return Admissions(admissionsContract).getApplicantsForOfficer(address(this));
     }
+
 
     function viewApplicant(address applicantContract) external view returns (string memory, string memory, string memory, bool, string memory) {
         require(isApplicantAssigned(applicantContract), "You can only view applications of applicants you have been assigned to");
@@ -66,10 +66,9 @@ contract Officer is IERC721Receiver {
         }
     }
 
-    function makeDecision(address applicantContract, string memory decision) internal {
+     function makeDecision(address applicantContract, string memory decision) internal {
         require(isApplicantAssigned(applicantContract), "You can only approve applications of applicants you have been assigned to");
         require(bytes(decision).length > 0, "Decision cannot be empty");
-
         ApplicantData storage applicantData = applicantsData[applicantContract];
         require(!applicantData.decisionMade, "Decision already made for this applicant");
         applicantData.decisionMade = true;
@@ -77,10 +76,17 @@ contract Officer is IERC721Receiver {
 
         // Update the decision in the Applicant contract
         Applicant(applicantContract).receiveDecision(decision);
+
+        // Update the admissions contract based on the decision
+        if (keccak256(bytes(decision)) == keccak256(bytes("accepted"))) {
+            Admissions(admissionsContract).addAcceptedApplicant(applicantContract);
+        } else if (keccak256(bytes(decision)) == keccak256(bytes("waitlisted"))) {
+            Admissions(admissionsContract).addWaitlistedApplicant(applicantContract);
+        }
     }
 
     function isApplicantAssigned(address applicantContract) internal view returns (bool) {
-        address[] memory applicantsForOfficer = Admissions(admissionsContract).getApplicantsForOfficer(address(this));
+        (address[] memory applicantsForOfficer, ) = Admissions(admissionsContract).getApplicantsForOfficer(address(this));
         for (uint256 i = 0; i < applicantsForOfficer.length; i++) {
             if (applicantsForOfficer[i] == applicantContract) {
                 return true;
