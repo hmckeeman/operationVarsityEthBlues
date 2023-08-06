@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../applicantContracts/applicant.sol"; // Import the Applicant contract 
-
 contract Admissions {
 
     address private deployer;
@@ -22,19 +20,12 @@ contract Admissions {
         // Note: The deployer is no longer automatically added as an approved officer
     }
 
-    modifier onlyDeployer() {
-        require(msg.sender == deployer, "Only the contract deployer can call this function");
+    modifier onlyAdmissionsOfficer() {
+        require(isAdmissionsOfficer(msg.sender) || msg.sender == deployer, "Only approved admissions officers or deployer can call this function");
         _;
     }
 
-    event AdmissionsOfficerAssigned(address indexed applicant, address indexed officer);
-
-
-    function approveAdmissionsOfficer(address officer) external onlyDeployer {
-        require(registeredAddresses[officer] == 0, "Address is already registered");
-        approvedAdmissionsOfficers.push(officer);
-        registeredAddresses[officer] = 2; // Set the role of the address to admissions officer (value 2)
-    }
+    event AdmissionsOfficerAssigned(address indexed student, address indexed officer);
 
     function isAdmissionsOfficer(address officer) public view returns (bool) {
         return registeredAddresses[officer] == 2; // Check if the address has the role of an admissions officer (value 2)
@@ -66,7 +57,13 @@ contract Admissions {
         registeredAddresses[applicant] = 1; // Set the role of the address to applicant (value 1)
     }
 
-    function assignAdmissionsOfficer() external onlyDeployer {
+    function approveAdmissionsOfficer(address officer) external onlyAdmissionsOfficer {
+        require(registeredAddresses[officer] == 0, "Address is already registered");
+        approvedAdmissionsOfficers.push(officer);
+        registeredAddresses[officer] = 2; // Set the role of the address to admissions officer (value 2)
+    }
+
+    function assignAdmissionsOfficer() external onlyAdmissionsOfficer {
         require(unassignedApplicants.length > 0, "No unassigned applicants left");
         require(acceptedStudents.length < maxStudents, "Maximum number of students already reached");
 
@@ -108,11 +105,8 @@ contract Admissions {
                 applicantToOfficer[selectedApplicant] = approvedAdmissionsOfficers[officerIndex];
                 assignedApplicants.push(selectedApplicant);
 
-                // Move the assigned applicant from unassignedApplicants to assignedApplicants
-                moveApplicantToAssigned(randomIndex);
-
-                // Set the officer contract address in the Applicant contract
-                Applicant(selectedApplicant).grantOfficerApproval(approvedAdmissionsOfficers[officerIndex]);
+                // Remove the assigned applicant from the unassigned applicants list
+                removeApplicant(randomIndex);
 
                 // Emit the event
                 emit AdmissionsOfficerAssigned(selectedApplicant, approvedAdmissionsOfficers[officerIndex]);
@@ -126,7 +120,7 @@ contract Admissions {
         }
     }
 
-    function moveApplicantToAssigned(uint256 index) internal {
+    function removeApplicant(uint256 index) internal {
         if (index >= unassignedApplicants.length) return;
 
         for (uint256 i = index; i < unassignedApplicants.length - 1; i++) {
@@ -134,7 +128,6 @@ contract Admissions {
         }
         unassignedApplicants.pop();
     }
-
 
     function getRandomIndex(uint256 length) internal view returns (uint256) {
         uint256 seed = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender))) % length;
