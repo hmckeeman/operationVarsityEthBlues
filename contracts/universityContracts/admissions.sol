@@ -116,7 +116,6 @@ contract Admissions {
         newStudents.push(applicant);
     }
 
-
     function removeApplicant(address[] storage array, uint256 index) internal {
         if (index >= array.length) return;
 
@@ -130,6 +129,15 @@ contract Admissions {
         for (uint256 i = 0; i < acceptedApplicants.length; i++) {
             if (acceptedApplicants[i] == applicant) {
                 removeApplicant(acceptedApplicants, i);
+                return;
+            }
+        }
+    }
+
+    function removeAssignedApplicant(address applicant) external {
+        for (uint256 i = 0; i < assignedApplicants.length; i++) {
+            if (assignedApplicants[i] == applicant) {
+                removeApplicant(assignedApplicants, i);
                 return;
             }
         }
