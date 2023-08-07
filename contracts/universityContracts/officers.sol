@@ -18,8 +18,10 @@ contract Officer is IERC721Receiver {
     address private officer;
     address private admissionsContract;
     uint256 private totalAssignedApplicants;
-    address private deployer; // New variable to store the deployer's address
+    address private deployer;
     mapping(address => ApplicantData) private applicantsData;
+    mapping(address => address) private applicantToOfficer;
+    address[] private assignedApplicants; // Array to track assigned applicants
 
     // Modifier to allow only the contract deployer to call the standardized functions
     modifier onlyAuthorized() {
@@ -48,7 +50,6 @@ contract Officer is IERC721Receiver {
         return Admissions(admissionsContract).getApplicantsForOfficer(address(this));
     }
 
-
     function viewApplicant(address applicantContract) external view returns (string memory, string memory, string memory, bool, string memory) {
         require(isApplicantAssigned(applicantContract), "You can only view applications of applicants you have been assigned to");
 
@@ -66,7 +67,7 @@ contract Officer is IERC721Receiver {
         }
     }
 
-     function makeDecision(address applicantContract, string memory decision) internal {
+    function makeDecision(address applicantContract, string memory decision) internal {
         require(isApplicantAssigned(applicantContract), "You can only approve applications of applicants you have been assigned to");
         require(bytes(decision).length > 0, "Decision cannot be empty");
         ApplicantData storage applicantData = applicantsData[applicantContract];
@@ -83,6 +84,9 @@ contract Officer is IERC721Receiver {
         } else if (keccak256(bytes(decision)) == keccak256(bytes("waitlisted"))) {
             Admissions(admissionsContract).addWaitlistedApplicant(applicantContract);
         }
+
+        // Remove the applicant's address from the officer's assigned applicants list
+        Admissions(admissionsContract).removeAssignedApplicant(applicantContract);
     }
 
     function isApplicantAssigned(address applicantContract) internal view returns (bool) {
