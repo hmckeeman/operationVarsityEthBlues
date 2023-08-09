@@ -1,10 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
-import "@chainlink/contracts/src/v0.8/VRFV2WrapperConsumerBase.sol";
 
-contract Admissions is VRFV2WrapperConsumerBase, ConfirmedOwner {
+contract VRFAdmissions is VRFConsumerBaseV2, ConfirmedOwner {
+
+    struct RequestStatus {
+        bool fulfilled; // whether the request has been successfully fulfilled
+        bool exists; // whether a requestId exists
+        uint256[] randomWords;
+    }
     address[] private unassignedApplicants;
     address[] private assignedApplicants;
     address[] private approvedAdmissionsOfficers;
@@ -15,31 +22,46 @@ contract Admissions is VRFV2WrapperConsumerBase, ConfirmedOwner {
     uint256 private lastAssignedOfficerIndex;
     uint256 private acceptedStudentCount;
 
-    mapping(address => address) private applicantToOfficer;
-    mapping(address => uint8) private registeredAddresses;
-
-    uint32 private callbackGasLimit = 100000;
-    uint16 private requestConfirmations = 3;
-    uint32 private numWords = 2;
-
-    uint256 public lastRequestId;
-
-    address private linkAddress = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
-    address private wrapperAddress = 0xab18414CD93297B0d12ac29E63Ca20f515b3DB46;
-
     mapping(uint256 => uint256) private requestIdToPayment;
     mapping(uint256 => uint256[]) private requestIdToRandomWords;
     mapping(uint256 => bool) private requestIdToFulfilled;
+    mapping(address => address) private applicantToOfficer;
+    mapping(address => uint8) private registeredAddresses;
+    mapping(uint256 => RequestStatus)
+        public s_requests; /* requestId --> requestStatus */
+    VRFCoordinatorV2Interface COORDINATOR;
+
+    uint16 private requestConfirmations = 3;
+    uint32 private numWords = 2;
+    uint256 public lastRequestId;
+    uint64 s_subscriptionId;
+    uint256[] public requestIds;
+
+
+
+    address private vrfCoordinatorAddress = 0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625;
+    uint64 private subscriptionId;
+
+    bytes32 private keyHash = 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c;
+    uint256 private callbackGasLimit = 100000;
+
+    VRFCoordinatorV2Interface private vrfCoordinator;
 
     event RequestSent(uint256 requestId, uint32 numWords);
     event RequestFulfilled(uint256 requestId, uint256[] randomWords, uint256 payment);
     event AdmissionsOfficerAssigned(address indexed student, address indexed officer);
 
-    constructor(uint256 _maxStudents, address _vrfCoordinator)
-        VRFV2WrapperConsumerBase(_vrfCoordinator, linkAddress)
-        ConfirmedOwner(msg.sender) // Pass the owner's address to ConfirmedOwner constructor
+    constructor(
+        uint256 maxStudents,
+        uint64 subscriptionId
+    )
+        VRFConsumerBaseV2(0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625)
+        ConfirmedOwner(msg.sender)
     {
-        maxStudents = _maxStudents;
+        COORDINATOR = VRFCoordinatorV2Interface(
+            0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625
+        );
+        s_subscriptionId = subscriptionId;
     }
 
     modifier onlyAdmissionsOfficer() {
@@ -160,15 +182,39 @@ contract Admissions is VRFV2WrapperConsumerBase, ConfirmedOwner {
         }
     }
 
-    function assignAdmissionsOfficer() external onlyAdmissionsOfficer {
+    function assignAdmissionsOfficer(uint64 subscriptionId) external payable onlyAdmissionsOfficer {
         require(unassignedApplicants.length > 0, "No unassigned applicants left");
         require(newStudents.length < maxStudents, "Maximum number of students already reached");
 
         // Request randomness for officer assignment
-        uint256 requestId = requestRandomness(callbackGasLimit, requestConfirmations, numWords);
-        requestIdToPayment[requestId] = VRF_V2_WRAPPER.calculateRequestPrice(callbackGasLimit);
+        uint256 requestId = requestRandomWords(subscriptionId, requestConfirmations, numWords);
+        requestIdToPayment[requestId] = msg.value; // Store the sent Ether as payment
         lastRequestId = requestId;
         emit RequestSent(requestId, numWords);
+    }
+
+    function requestRandomWords()internal onlyOwner returns (uint256 requestId) {
+        // Will revert if subscription is not set and funded.
+        requestId = COORDINATOR.requestRandomWords(
+            keyHash,
+            s_subscriptionId,
+            requestConfirmations,
+            callbackGasLimit,
+            numWords
+        );
+        s_requests[requestId] = RequestStatus({
+            randomWords: new uint256[](0),
+            exists: true,
+            fulfilled: false
+        });
+        requestIds.push(requestId);
+        lastRequestId = requestId;
+        emit RequestSent(requestId, numWords);
+        return requestId;
+    }
+
+    function calculateServiceFee(uint256 _gas) internal view returns (uint256) {
+        return vrfCoordinator.getSubscriptionFee(subscriptionId);
     }
 
     function fulfillRandomWords(uint256 _requestId, uint256[] memory _randomWords) internal override {
@@ -179,38 +225,25 @@ contract Admissions is VRFV2WrapperConsumerBase, ConfirmedOwner {
         uint256 totalOfficers = approvedAdmissionsOfficers.length;
         uint256 totalApplicants = unassignedApplicants.length;
 
-        uint256 applicantsPerOfficer = totalApplicants / totalOfficers;
-        uint256 officerIndex = requestIdToRandomWords[_requestId][0] % totalOfficers;
-
-        // Assign applicants to the current officer
-        for (uint256 j = 0; j < applicantsPerOfficer; j++) {
-            if (unassignedApplicants.length == 0) {
-                // No unassigned applicants left, break the loop
-                break;
-            }
-
-            uint256 randomIndex = requestIdToRandomWords[_requestId][j + 1] % unassignedApplicants.length;
-            address selectedApplicant = unassignedApplicants[randomIndex];
-
-            // Assign the selected applicant to the current officer
-            applicantToOfficer[selectedApplicant] = approvedAdmissionsOfficers[officerIndex];
-            assignedApplicants.push(selectedApplicant);
-
-            // Remove the assigned applicant from the unassigned applicants list
-            removeApplicant(unassignedApplicants, randomIndex);
-
-            // Emit the event
-            emit AdmissionsOfficerAssigned(selectedApplicant, approvedAdmissionsOfficers[officerIndex]);
-
-            // Update the last assigned officer index
-            lastAssignedOfficerIndex = officerIndex;
-
-            // Increment the officer index for the next iteration
-            officerIndex = (officerIndex + 1) % totalOfficers;
-        }
-
         delete requestIdToPayment[_requestId];
         delete requestIdToFulfilled[_requestId];
         delete requestIdToRandomWords[_requestId];
+    }
+
+    function getRequestStatus(uint256 _requestId)
+        external
+        view
+        returns (
+            uint256 paid,
+            bool fulfilled,
+            uint256[] memory randomWords
+        )
+    {
+        require(requestIdToPayment[_requestId] > 0, "Request not found");
+        return (
+            requestIdToPayment[_requestId],
+            requestIdToFulfilled[_requestId],
+            requestIdToRandomWords[_requestId]
+        );
     }
 }
