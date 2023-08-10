@@ -5,13 +5,14 @@ import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
 
-contract VRFAdmissions is VRFConsumerBaseV2, ConfirmedOwner {
+contract Admissions is VRFConsumerBaseV2, ConfirmedOwner {
 
     struct RequestStatus {
         bool fulfilled; // whether the request has been successfully fulfilled
         bool exists; // whether a requestId exists
         uint256[] randomWords;
     }
+
     address[] private unassignedApplicants;
     address[] private assignedApplicants;
     address[] private approvedAdmissionsOfficers;
@@ -37,13 +38,11 @@ contract VRFAdmissions is VRFConsumerBaseV2, ConfirmedOwner {
     uint64 s_subscriptionId;
     uint256[] public requestIds;
 
-
-
     address private vrfCoordinatorAddress = 0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625;
     uint64 private subscriptionId;
 
     bytes32 private keyHash = 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c;
-    uint256 private callbackGasLimit = 100000;
+    uint32 private callbackGasLimit = 100000;
 
     VRFCoordinatorV2Interface private vrfCoordinator;
 
@@ -52,8 +51,8 @@ contract VRFAdmissions is VRFConsumerBaseV2, ConfirmedOwner {
     event AdmissionsOfficerAssigned(address indexed student, address indexed officer);
 
     constructor(
-        uint256 maxStudents,
-        uint64 subscriptionId
+        uint256 _maxStudents,
+        uint64 _subscriptionId
     )
         VRFConsumerBaseV2(0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625)
         ConfirmedOwner(msg.sender)
@@ -61,7 +60,8 @@ contract VRFAdmissions is VRFConsumerBaseV2, ConfirmedOwner {
         COORDINATOR = VRFCoordinatorV2Interface(
             0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625
         );
-        s_subscriptionId = subscriptionId;
+        s_subscriptionId = _subscriptionId;
+        maxStudents = _maxStudents;
     }
 
     modifier onlyAdmissionsOfficer() {
@@ -182,12 +182,12 @@ contract VRFAdmissions is VRFConsumerBaseV2, ConfirmedOwner {
         }
     }
 
-    function assignAdmissionsOfficer(uint64 subscriptionId) external payable onlyAdmissionsOfficer {
+    function assignAdmissionsOfficer() external payable onlyAdmissionsOfficer {
         require(unassignedApplicants.length > 0, "No unassigned applicants left");
         require(newStudents.length < maxStudents, "Maximum number of students already reached");
 
         // Request randomness for officer assignment
-        uint256 requestId = requestRandomWords(subscriptionId, requestConfirmations, numWords);
+        uint256 requestId = requestRandomWords();
         requestIdToPayment[requestId] = msg.value; // Store the sent Ether as payment
         lastRequestId = requestId;
         emit RequestSent(requestId, numWords);
@@ -213,10 +213,6 @@ contract VRFAdmissions is VRFConsumerBaseV2, ConfirmedOwner {
         return requestId;
     }
 
-    function calculateServiceFee(uint256 _gas) internal view returns (uint256) {
-        return vrfCoordinator.getSubscriptionFee(subscriptionId);
-    }
-
     function fulfillRandomWords(uint256 _requestId, uint256[] memory _randomWords) internal override {
         require(requestIdToPayment[_requestId] > 0, "Request not found");
         requestIdToFulfilled[_requestId] = true;
@@ -225,10 +221,61 @@ contract VRFAdmissions is VRFConsumerBaseV2, ConfirmedOwner {
         uint256 totalOfficers = approvedAdmissionsOfficers.length;
         uint256 totalApplicants = unassignedApplicants.length;
 
-        delete requestIdToPayment[_requestId];
-        delete requestIdToFulfilled[_requestId];
-        delete requestIdToRandomWords[_requestId];
-    }
+        // Calculate the number of applicants per officer
+        uint256 applicantsPerOfficer = totalApplicants / totalOfficers;
+        uint256 remainingApplicants = totalApplicants % totalOfficers;
+
+        // Assign applicants to the officers
+        for (uint256 i = 0; i < totalApplicants; i++) {
+            if (i >= totalOfficers) {
+                // All officers have been assigned, break the loop
+                break;
+            }
+
+            // Calculate the number of applicants to assign to this officer
+            uint256 count = applicantsPerOfficer;
+            if (remainingApplicants > 0) {
+                count += 1;
+                remainingApplicants -= 1;
+            }
+
+            // Get the index of the next officer to assign
+            uint256 officerIndex = (lastAssignedOfficerIndex + 1) % totalOfficers;
+
+            // Assign applicants to the current officer
+            for (uint256 j = 0; j < count; j++) {
+                if (unassignedApplicants.length == 0) {
+                    // No unassigned applicants left, break the loop
+                    break;
+                }
+
+                // Use randomness to select an index for the unassigned applicants
+                uint256 randomIndex = _randomWords[j] % unassignedApplicants.length;
+                address selectedApplicant = unassignedApplicants[randomIndex];
+
+                // Assign the selected applicant to the current officer
+                applicantToOfficer[selectedApplicant] = approvedAdmissionsOfficers[officerIndex];
+                assignedApplicants.push(selectedApplicant);
+
+                // Remove the assigned applicant from the unassigned applicants list
+                removeApplicant(unassignedApplicants, randomIndex);
+
+                // Emit the event
+                emit AdmissionsOfficerAssigned(selectedApplicant, approvedAdmissionsOfficers[officerIndex]);
+
+                // Update the last assigned officer index
+                lastAssignedOfficerIndex = officerIndex;
+
+                // Increment the officer index for the next iteration
+                officerIndex = (officerIndex + 1) % totalOfficers;
+            }
+        }
+
+    // Clear requestIdToPayment and requestIdToFulfilled mappings for the fulfilled request
+    delete requestIdToPayment[_requestId];
+    delete requestIdToFulfilled[_requestId];
+    delete requestIdToRandomWords[_requestId];
+}
 
     function getRequestStatus(uint256 _requestId)
         external
