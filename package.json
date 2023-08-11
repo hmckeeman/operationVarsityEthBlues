@@ -1,0 +1,15 @@
+{
+  "name": "universityadmissions",
+  "version": "1.0.0",
+  "description": "This project puts the university admissions process on the ethereum blockchain. Inspired by Operation Varsity Blues. Created with OpenZeppelin, IPFS, Solidity, Chainlink, Remix, and VSCode. Funded by a Fulbright Grant. No more corruption. No more academic gate keeping. Equal opportunities. Equal Education. Radical Transparency.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "openzeppelin-contracts": "^4.0.0"
+  }
+}

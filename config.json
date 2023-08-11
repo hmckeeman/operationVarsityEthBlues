@@ -1,0 +1,16 @@
+{
+    "language": "Solidity",
+    "sources": {
+      "./contracts": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;"
+      }
+    },
+    "settings": {
+      "outputSelection": {
+        "*": {
+          "*": ["abi", "metadata", "evm.bytecode", "evm.deployedBytecode"]
+        }
+      }
+    }
+  }
+  
