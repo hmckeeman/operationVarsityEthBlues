@@ -1,0 +1,16 @@
+# Ignore Truffle build artifacts
+/build/
+/artifacts/
+
+# Ignore Truffle configuration file
+truffle-config.js
+
+# Ignore Solidity compiler output
+/contracts/*.json
+
+# Ignore Node.js dependencies
+/node_modules/
+
+# Ignore development environment files
+.env
+.vscode/
