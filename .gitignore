@@ -14,3 +14,8 @@ truffle-config.js
 # Ignore development environment files
 .env
 .vscode/
+
+# Ignoring sensitive information
+.truffle-generated/
+.truffle/
+.secret
