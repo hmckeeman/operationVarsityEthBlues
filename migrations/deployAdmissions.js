@@ -3,3 +3,10 @@ const Admissions = artifacts.require("Admissions"); // Adjust the contract name 
 module.exports = function (deployer) {
   deployer.deploy(Admissions, 1000); // Use the desired initial value for maxStudents
 };
+
+
+
+//truffle compile
+//truffle migrate --reset
+
+
