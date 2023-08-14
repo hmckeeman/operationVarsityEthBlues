@@ -8,6 +8,7 @@ module.exports = function(deployer, network, accounts) {
 
 
 //truffle compile
+//truffle develop
 //truffle migrate --reset
 
 
