@@ -44,6 +44,10 @@ contract Admissions {
         return registeredAddresses[account] == 1; // Check if the address has the role of an applicant (value 1)
     }
 
+    function getMaxStudents() public view returns (uint256) {
+        return maxStudents;
+    }
+
     function getUnassignedApplicants() external view returns (uint256, address[] memory) {
         return (unassignedApplicants.length, unassignedApplicants);
     }
