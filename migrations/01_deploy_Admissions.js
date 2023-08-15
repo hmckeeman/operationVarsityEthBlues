@@ -1,9 +1,17 @@
 const Admissions = artifacts.require("Admissions"); // Adjust the contract name if necessary
 
-module.exports = function(deployer, network, accounts) {
-  const deployerAddress = accounts[0]; // Assuming deployer is the first account
-  deployer.deploy(Admissions, 1000, { from: deployerAddress });
+module.exports = async function(deployer, network, accounts) {
+  const deployerAddress = accounts[0];
+  console.log("Deploying from:", deployerAddress);
+  console.log("Deploying with maxStudents:", 1000);
+  try {
+    await deployer.deploy(Admissions, 1000, { from: deployerAddress });
+    console.log("Deployment successful");
+  } catch (error) {
+    console.log("Deployment failed:", error);
+  }
 };
+
 
 
 

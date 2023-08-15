@@ -27,7 +27,7 @@ contract Admissions {
     constructor(uint256 _maxStudents) {
         maxStudents = _maxStudents;
         deployer = msg.sender;
-        // Note: The deployer is no longer automatically added as an approved officer
+        //The deployer is no longer automatically added as an approved officer
     }
 
     function approveAdmissionsOfficer(address officer) external onlyAdmissionsOfficer {
