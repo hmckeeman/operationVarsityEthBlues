@@ -48,14 +48,14 @@ contract Applicant {
         require(bytes(admissionDecision).length > 0, "Admission decision not available");
         require(keccak256(bytes(admissionDecision)) == keccak256("accepted"), "You can only accept the offer if you have been accepted");
 
+        // Add the applicant to the newStudents array in the Admissions contract
+        Admissions(admissionsContract).addNewStudent(address(this));
 
         // Remove the applicant from the acceptApplicants array in the Admissions contract
         Admissions(admissionsContract).removeAcceptedApplicant(address(this));
 
         // Decrease the maxStudents count in the Admissions contract
         Admissions(admissionsContract).decreaseMaxStudents();
-
-        // Add the applicant to the newStudents array in the Admissions contract
-        Admissions(admissionsContract).addNewStudent(address(this));
     }
+
 }

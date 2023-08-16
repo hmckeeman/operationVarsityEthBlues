@@ -115,17 +115,28 @@ contract Admissions {
         waitlistedApplicants.push(applicant);
     }
 
+    function isAcceptedApplicant(address applicant) internal view returns (bool) {
+        for (uint256 i = 0; i < acceptedApplicants.length; i++) {
+            if (acceptedApplicants[i] == applicant) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function addNewStudent(address applicant) external {
         require(applicantToOfficer[applicant] != address(0), "Applicant has not been assigned to an officer");
+        require(isAcceptedApplicant(applicant), "Applicant has not been accepted");
+        
         newStudents.push(applicant);
     }
+
 
     function removeApplicant(address[] storage array, uint256 index) internal {
         require(index < array.length, "Index out of bounds");
         array[index] = array[array.length - 1];
         array.pop();
     }
-
 
     function removeAcceptedApplicant(address applicant) external {
         for (uint256 i = 0; i < acceptedApplicants.length; i++) {
