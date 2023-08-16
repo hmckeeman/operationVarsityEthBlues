@@ -121,18 +121,17 @@ contract Admissions {
     }
 
     function removeApplicant(address[] storage array, uint256 index) internal {
-        if (index >= array.length) return;
-
-        for (uint256 i = index; i < array.length - 1; i++) {
-            array[i] = array[i + 1];
-        }
+        require(index < array.length, "Index out of bounds");
+        array[index] = array[array.length - 1];
         array.pop();
     }
+
 
     function removeAcceptedApplicant(address applicant) external {
         for (uint256 i = 0; i < acceptedApplicants.length; i++) {
             if (acceptedApplicants[i] == applicant) {
                 removeApplicant(acceptedApplicants, i);
+                delete registeredAddresses[applicant];
                 return;
             }
         }
