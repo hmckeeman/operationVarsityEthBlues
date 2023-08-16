@@ -86,7 +86,7 @@ contract Officer is IERC721Receiver {
         }
 
         // Remove the applicant's address from the officer's assigned applicants list
-        Admissions(admissionsContract).removeAssignedApplicant(applicantContract);
+        Admissions(admissionsContract).removeAssignedApplicant(address(this), applicantContract);
     }
 
     function isApplicantAssigned(address applicantContract) internal view returns (bool) {

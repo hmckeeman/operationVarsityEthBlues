@@ -6,27 +6,25 @@ import "../universityContracts/admissions.sol";
 contract Applicant {
     address public admissionsContract;
     address public applicant;
-    bool public decisionReceived; // New variable to track decision status
-    string public admissionDecision; // New variable to store the admission decision
-    address private contractDeployer; // State variable to store the contract deployer's address
-    address private officerContract; // New variable to store the officer contract address
+    bool public decisionReceived;
+    string public admissionDecision;
+    address private contractDeployer;
+    address private officerContract;
 
-    // Modifier to allow either the contract deployer or the approved officer to call the function
     modifier onlyAuthorized() {
         require(msg.sender == contractDeployer || msg.sender == officerContract, "Only the contract deployer or the approved officer can call this function");
         _;
     }
 
     constructor(address _admissions) {
-        contractDeployer = msg.sender; // Set the contract deployer's address
+        contractDeployer = msg.sender;
         admissionsContract = _admissions;
-        applicant = address(this); // Set applicant to the address of the caller (the deployer of the contract)
-
+        applicant = address(this);
         Admissions(admissionsContract).addApplicant(applicant);
     }
 
     function getAssignedOfficer() external view onlyAuthorized returns (address) {
-        return Admissions(admissionsContract).getAssignedOfficer(applicant);
+        return Admissions(admissionsContract).getAdmissionsOfficerForApplicant(applicant);
     }
 
     function isApplicantRegistered() external view onlyAuthorized returns (bool) {

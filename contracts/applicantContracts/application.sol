@@ -18,27 +18,22 @@ contract Application is ERC721 {
 
     mapping(uint256 => ApplicantData) private _applications;
     address private deployer;
-    address private applicantContract; // Address of the applicant contract
-    address private admissionsContract; // Address of the admissions contract
+    address private applicantContract;
+    address private admissionsContract;
 
     constructor(address _applicantContract, address _admissionsContract) ERC721("Application", "APP") {
-        deployer = msg.sender; // Set the contract deployer address
+        deployer = msg.sender;
         applicantContract = _applicantContract;
         admissionsContract = _admissionsContract;
     }
 
-    // Override _msgSender() to return the applicant contract address as the sender
     function _msgSender() internal view override returns (address) {
         return applicantContract;
     }
 
     function createApplication(string memory name, string memory university, string memory ipfsLink) external {
         uint256 tokenId = _tokenIds.current();
-
-        // Transfer ownership to the applicant contract
         _mint(applicantContract, tokenId);
-
-        // Increment token ID after minting to avoid conflicts
         _tokenIds.increment();
 
         ApplicantData memory newApplication = ApplicantData(name, university, ipfsLink);
@@ -47,18 +42,13 @@ contract Application is ERC721 {
 
     function transferApplicationToOfficerContract(address officerContract, uint256 tokenId) external {
         require(_exists(tokenId), "Application not found");
-
-        // Ensure that the caller is either the contract deployer or the authorized applicant
         address owner = ownerOf(tokenId);
         require(owner == deployer || owner == applicantContract, "Only the contract deployer or authorized applicant contract can call this function");
 
-        address assignedOfficer = Admissions(admissionsContract).getAssignedOfficer(applicantContract);
+        address assignedOfficer = Admissions(admissionsContract).getAdmissionsOfficerForApplicant(applicantContract);
         require(assignedOfficer == officerContract, "You can only send your application to your assigned officer");
 
-        // Make sure the applicant contract is approved to send this application to the officer contract
         approve(officerContract, tokenId);
-
-        // Transfer the NFT to the officer contract
         safeTransferFrom(applicantContract, officerContract, tokenId);
     }
 
