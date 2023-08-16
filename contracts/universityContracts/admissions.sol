@@ -7,15 +7,14 @@ contract Admissions {
     address[] private unassignedApplicants;
     address[] private assignedApplicants;
     address[] private approvedAdmissionsOfficers;
-    address[] private newStudents; // New array to store addresses of accepted students
+    address[] private newStudents;
     address[] private acceptedApplicants;
-    address[] private waitlistedApplicants; // New array to store addresses of waitlisted applicants
+    address[] private waitlistedApplicants;
     uint256 private maxStudents;
-    uint256 private lastAssignedOfficerIndex;
-    uint256 private acceptedStudentCount; // New variable to keep track of accepted students
-
+    
     mapping(address => address) private applicantToOfficer;
-    mapping(address => uint8) private registeredAddresses; // Combined mapping to track registered addresses and their roles
+    mapping(address => uint8) private registeredAddresses;
+    mapping(address => address[]) private officerToApplicants;
 
     modifier onlyAdmissionsOfficer() {
         require(isAdmissionsOfficer(msg.sender) || msg.sender == deployer, "Only approved admissions officers or deployer can call this function");
@@ -27,21 +26,20 @@ contract Admissions {
     constructor(uint256 _maxStudents) {
         maxStudents = _maxStudents;
         deployer = msg.sender;
-        //The deployer is no longer automatically added as an approved officer
     }
 
     function approveAdmissionsOfficer(address officer) external onlyAdmissionsOfficer {
         require(registeredAddresses[officer] == 0, "Address is already registered");
         approvedAdmissionsOfficers.push(officer);
-        registeredAddresses[officer] = 2; // Set the role of the address to admissions officer (value 2)
+        registeredAddresses[officer] = 2;
     }
 
     function isAdmissionsOfficer(address officer) public view returns (bool) {
-        return registeredAddresses[officer] == 2; // Check if the address has the role of an admissions officer (value 2)
+        return registeredAddresses[officer] == 2;
     }
 
     function isApplicant(address account) public view returns (bool) {
-        return registeredAddresses[account] == 1; // Check if the address has the role of an applicant (value 1)
+        return registeredAddresses[account] == 1;
     }
 
     function getMaxStudents() public view returns (uint256) {
@@ -55,7 +53,7 @@ contract Admissions {
     function getAssignedApplicants() external view returns (uint256, address[] memory) {
         return (assignedApplicants.length, assignedApplicants);
     }
-
+    
     function getAdmissionsOfficers() external view returns (uint256, address[] memory) {
         return (approvedAdmissionsOfficers.length, approvedAdmissionsOfficers);
     }
@@ -64,55 +62,118 @@ contract Admissions {
         return (newStudents.length, newStudents);
     }
 
-    function getWaitlistedApplicants() external view returns (uint256, address[] memory) {
-        return (waitlistedApplicants.length, waitlistedApplicants);
-    }
-
     function getAcceptedApplicants () external view returns (uint256, address [] memory) {
         return (acceptedApplicants.length, acceptedApplicants);
     }
 
-    function getAssignedOfficer(address applicant) external view returns (address) {
+    function getWaitlistedApplicants() external view returns (uint256, address[] memory) {
+        return (waitlistedApplicants.length, waitlistedApplicants);
+    }
+    
+    function getAdmissionsOfficerForApplicant(address applicant) public view returns (address) {
         return applicantToOfficer[applicant];
     }
 
-    function getApplicantsForOfficer(address officer) external view returns (address[] memory, uint256) {
-        uint256 count = 0;
-        for (uint256 i = 0; i < assignedApplicants.length; i++) {
-            if (applicantToOfficer[assignedApplicants[i]] == officer) {
-                count++;
-            }
-        }
-
-        address[] memory applicants = new address[](count);
-        uint256 index = 0;
-        for (uint256 i = 0; i < assignedApplicants.length; i++) {
-            if (applicantToOfficer[assignedApplicants[i]] == officer) {
-                applicants[index] = assignedApplicants[i];
-                index++;
-            }
-        }
-
-        return (applicants, count);
+    function getApplicantsForOfficer(address officerAddress) public view returns (address[] memory, uint256) {
+        address[] memory applicants = officerToApplicants[officerAddress];
+        return (applicants, applicants.length);
     }
 
     function addApplicant(address applicant) external {
         require(registeredAddresses[applicant] == 0, "Address is already registered");
         unassignedApplicants.push(applicant);
-        registeredAddresses[applicant] = 1; // Set the role of the address to applicant (value 1)
+        registeredAddresses[applicant] = 1;
     }
 
-    function decreaseMaxStudents() external {
-        require(maxStudents > 0, "Cannot decrease maxStudents below 0");
-        maxStudents--;
-    }
-
-    function addAcceptedApplicant(address applicant) public {
+    function addAcceptedApplicant(address applicant) public onlyAdmissionsOfficer {
         acceptedApplicants.push(applicant);
     }
 
-    function addWaitlistedApplicant(address applicant) public {
+    function addWaitlistedApplicant(address applicant) public onlyAdmissionsOfficer {
         waitlistedApplicants.push(applicant);
+    }
+
+    function addNewStudent(address applicant) external onlyAdmissionsOfficer {
+        require(applicantToOfficer[applicant] != address(0), "Applicant has not been assigned to an officer");
+        require(isAcceptedApplicant(applicant), "Applicant has not been accepted");
+        newStudents.push(applicant);
+    }
+
+    function assignAdmissionsOfficer() external onlyAdmissionsOfficer {
+        require(unassignedApplicants.length > 0, "No unassigned applicants left");
+        require(newStudents.length < maxStudents, "Maximum number of students already reached");
+        require(approvedAdmissionsOfficers.length > 0, "No admissions officers to assign");
+        
+        while (unassignedApplicants.length > 0) {
+            uint randomIndex = getRandomIndex(unassignedApplicants.length);
+            address applicant = unassignedApplicants[randomIndex];
+            address officer = getRandomOfficer();
+
+            assignApplicantToOfficer(applicant, officer);
+            removeApplicant(unassignedApplicants, randomIndex);
+        }
+    }
+
+    function assignApplicantToOfficer(address applicant, address officer) internal {
+        applicantToOfficer[applicant] = officer;
+        assignedApplicants.push(applicant);
+        
+        // Add the applicant to the list of applicants for this officer
+        officerToApplicants[officer].push(applicant);
+        
+        emit AdmissionsOfficerAssigned(applicant, officer);
+    }
+
+    function removeApplicant(address[] storage array, uint256 index) internal {
+        require(index < array.length, "Index out of bounds");
+        array[index] = array[array.length - 1];
+        array.pop();
+    }
+
+    function removeAcceptedApplicant(address applicant) external onlyAdmissionsOfficer {
+        for (uint i = 0; i < acceptedApplicants.length; i++) {
+            if (acceptedApplicants[i] == applicant) {
+                removeApplicant(acceptedApplicants, i);
+                break;
+            }
+        }
+    }
+
+    function removeAssignedApplicant(address officerAddress, address applicantAddress) public {
+        // Get the list of applicants for the given officer
+        address[] storage applicants = officerToApplicants[officerAddress];
+
+        // Find the index of the applicant to be removed
+        uint256 indexToRemove = applicants.length;
+        for (uint256 i = 0; i < applicants.length; i++) {
+            if (applicants[i] == applicantAddress) {
+                indexToRemove = i;
+                break;
+            }
+        }
+
+        // Ensure that the applicant was found in the array
+        require(indexToRemove < applicants.length, "Applicant not found");
+
+        // Remove the applicant from the array by moving the last element
+        // to the index to remove, and then decreasing the array size
+        applicants[indexToRemove] = applicants[applicants.length - 1];
+        applicants.pop();
+    }
+
+    function decreaseMaxStudents() external onlyAdmissionsOfficer {
+        require(maxStudents > 0, "Max students already at zero");
+        maxStudents -= 1;
+    }
+
+    function getRandomIndex(uint256 length) internal view returns (uint256) {
+        uint256 seed = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender))) % length;
+        return seed;
+    }
+
+    function getRandomOfficer() internal view returns (address) {
+        uint randomIndex = getRandomIndex(approvedAdmissionsOfficers.length);
+        return approvedAdmissionsOfficers[randomIndex];
     }
 
     function isAcceptedApplicant(address applicant) internal view returns (bool) {
@@ -122,100 +183,5 @@ contract Admissions {
             }
         }
         return false;
-    }
-
-    function addNewStudent(address applicant) external {
-        require(applicantToOfficer[applicant] != address(0), "Applicant has not been assigned to an officer");
-        require(isAcceptedApplicant(applicant), "Applicant has not been accepted");
-        
-        newStudents.push(applicant);
-    }
-
-
-    function removeApplicant(address[] storage array, uint256 index) internal {
-        require(index < array.length, "Index out of bounds");
-        array[index] = array[array.length - 1];
-        array.pop();
-    }
-
-    function removeAcceptedApplicant(address applicant) external {
-        for (uint256 i = 0; i < acceptedApplicants.length; i++) {
-            if (acceptedApplicants[i] == applicant) {
-                removeApplicant(acceptedApplicants, i);
-                delete registeredAddresses[applicant];
-                return;
-            }
-        }
-    }
-
-    function removeAssignedApplicant(address applicant) external {
-        for (uint256 i = 0; i < assignedApplicants.length; i++) {
-            if (assignedApplicants[i] == applicant) {
-                removeApplicant(assignedApplicants, i);
-                return;
-            }
-        }
-    }
-
-    function assignAdmissionsOfficer() external onlyAdmissionsOfficer {
-        require(unassignedApplicants.length > 0, "No unassigned applicants left");
-        require(newStudents.length < maxStudents, "Maximum number of students already reached");
-
-        uint256 totalOfficers = approvedAdmissionsOfficers.length;
-        uint256 totalApplicants = unassignedApplicants.length;
-
-        // Calculate the number of applicants per officer
-        uint256 applicantsPerOfficer = totalApplicants / totalOfficers;
-        uint256 remainingApplicants = totalApplicants % totalOfficers;
-
-        // Assign applicants to the officers
-        for (uint256 i = 0; i < totalApplicants; i++) {
-            if (i >= totalOfficers) {
-                // All officers have been assigned, break the loop
-                break;
-            }
-
-            // Calculate the number of applicants to assign to this officer
-            uint256 count = applicantsPerOfficer;
-            if (remainingApplicants > 0) {
-                count += 1;
-                remainingApplicants -= 1;
-            }
-
-            // Get the index of the next officer to assign
-            uint256 officerIndex = (lastAssignedOfficerIndex + 1) % totalOfficers;
-
-            // Assign applicants to the current officer
-            for (uint256 j = 0; j < count; j++) {
-                if (unassignedApplicants.length == 0) {
-                    // No unassigned applicants left, break the loop
-                    break;
-                }
-
-                uint256 randomIndex = getRandomIndex(unassignedApplicants.length);
-                address selectedApplicant = unassignedApplicants[randomIndex];
-
-                // Assign the selected applicant to the current officer
-                applicantToOfficer[selectedApplicant] = approvedAdmissionsOfficers[officerIndex];
-                assignedApplicants.push(selectedApplicant);
-
-                // Remove the assigned applicant from the unassigned applicants list
-                removeApplicant(unassignedApplicants, randomIndex);
-
-                // Emit the event
-                emit AdmissionsOfficerAssigned(selectedApplicant, approvedAdmissionsOfficers[officerIndex]);
-
-                // Update the last assigned officer index
-                lastAssignedOfficerIndex = officerIndex;
-
-                // Increment the officer index for the next iteration
-                officerIndex = (officerIndex + 1) % totalOfficers;
-            }
-        }
-    }
-
-    function getRandomIndex(uint256 length) internal view returns (uint256) {
-        uint256 seed = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender))) % length;
-        return seed;
     }
 }
