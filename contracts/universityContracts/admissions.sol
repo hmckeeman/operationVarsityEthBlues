@@ -93,7 +93,7 @@ contract Admissions {
         waitlistedApplicants.push(applicant);
     }
 
-    function addNewStudent(address applicant) external onlyAdmissionsOfficer {
+    function addNewStudent(address applicant) external {
         require(applicantToOfficer[applicant] != address(0), "Applicant has not been assigned to an officer");
         require(isAcceptedApplicant(applicant), "Applicant has not been accepted");
         newStudents.push(applicant);
@@ -103,14 +103,27 @@ contract Admissions {
         require(unassignedApplicants.length > 0, "No unassigned applicants left");
         require(newStudents.length < maxStudents, "Maximum number of students already reached");
         require(approvedAdmissionsOfficers.length > 0, "No admissions officers to assign");
-        
+
+        // Step 1: Randomly shuffle the officers
+        for (uint256 i = 0; i < approvedAdmissionsOfficers.length; i++) {
+            uint256 randomIndex = getRandomIndex(approvedAdmissionsOfficers.length);
+            // Swap
+            address temp = approvedAdmissionsOfficers[i];
+            approvedAdmissionsOfficers[i] = approvedAdmissionsOfficers[randomIndex];
+            approvedAdmissionsOfficers[randomIndex] = temp;
+        }
+
+        // Step 2: Assign applicants in a round-robin fashion
+        uint256 officerIndex = 0;
         while (unassignedApplicants.length > 0) {
-            uint randomIndex = getRandomIndex(unassignedApplicants.length);
-            address applicant = unassignedApplicants[randomIndex];
-            address officer = getRandomOfficer();
+            address applicant = unassignedApplicants[unassignedApplicants.length - 1];
+            address officer = approvedAdmissionsOfficers[officerIndex];
 
             assignApplicantToOfficer(applicant, officer);
-            removeApplicant(unassignedApplicants, randomIndex);
+            removeApplicant(unassignedApplicants, unassignedApplicants.length - 1);
+
+            // Move to the next officer, wrap around if necessary
+            officerIndex = (officerIndex + 1) % approvedAdmissionsOfficers.length;
         }
     }
 
@@ -130,7 +143,7 @@ contract Admissions {
         array.pop();
     }
 
-    function removeAcceptedApplicant(address applicant) external onlyAdmissionsOfficer {
+    function removeAcceptedApplicant(address applicant) external {
         for (uint i = 0; i < acceptedApplicants.length; i++) {
             if (acceptedApplicants[i] == applicant) {
                 removeApplicant(acceptedApplicants, i);
@@ -161,7 +174,7 @@ contract Admissions {
         applicants.pop();
     }
 
-    function decreaseMaxStudents() external onlyAdmissionsOfficer {
+    function decreaseMaxStudents() external {
         require(maxStudents > 0, "Max students already at zero");
         maxStudents -= 1;
     }
