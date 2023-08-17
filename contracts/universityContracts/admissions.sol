@@ -21,7 +21,7 @@ contract Admissions {
         _;
     }
 
-    event AdmissionsOfficerAssigned(address indexed student, address indexed officer);
+    event AdmissionsOfficerAssigned(address indexed applicant, address indexed officer);
 
     constructor(uint256 _maxStudents) {
         maxStudents = _maxStudents;
