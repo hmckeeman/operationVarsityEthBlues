@@ -20,3 +20,6 @@ module.exports = async function(callback) {
     }
     
 };
+
+
+// truffle exec scripts/approveOfficer.js
