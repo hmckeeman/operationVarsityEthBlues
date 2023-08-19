@@ -28,7 +28,7 @@ contract Admissions {
         deployer = msg.sender;
     }
 
-    function approveAdmissionsOfficer(address officer) external onlyAdmissionsOfficer {
+    function approveOfficer(address officer) external onlyAdmissionsOfficer {
         require(registeredAddresses[officer] == 0, "Address is already registered");
         approvedAdmissionsOfficers.push(officer);
         registeredAddresses[officer] = 2;
