@@ -10,12 +10,13 @@ module.exports = async function(callback) {
         const officer = await Officer.deployed();
 
         // Approve the Officer contract address in the Admissions contract
-        await admissions.approveAdmissionOfficer(officer.address);
+        await admissions.approveAdmissionsOfficer(officer.address);
 
         console.log(`Officer contract at address ${officer.address} has been approved in the Admissions contract.`);
         callback(0);
     } catch (error) {
-        console.error(error);
+        console.error("An error occurred:", error);
         callback(1);
     }
+    
 };
