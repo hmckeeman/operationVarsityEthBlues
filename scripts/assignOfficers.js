@@ -25,3 +25,7 @@ module.exports = async function(callback) {
         callback(error);
     }
 };
+
+
+
+//truffle exec scripts/assignOfficers.js
