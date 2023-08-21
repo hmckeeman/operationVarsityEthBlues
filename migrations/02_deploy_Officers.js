@@ -19,13 +19,17 @@ module.exports = async function(deployer, network, accounts) {
   // Get the deployed Admissions contract
   const admissionsInstance = await Admissions.deployed();
   
-  // Deploy the Officer contract next, passing in the Admissions contract's address
-  console.log("Deploying Officer contract with Admissions contract address:", admissionsInstance.address);
-  
-  try {
-    await deployer.deploy(Officer, admissionsInstance.address, { from: deployerAddress });
-    console.log("Officer Deployment successful");
-  } catch (error) {
-    console.log("Officer Deployment failed:", error);
+  // Define the number of Officer contracts you want to deploy
+  const numberOfOfficers = 5; 
+  console.log(`Deploying ${numberOfOfficers} Officer contracts with Admissions contract address: ${admissionsInstance.address}`);
+
+  for (let i = 0; i < numberOfOfficers; i++) {
+    try {
+      // Deploy each Officer contract instance, passing in the Admissions contract's address
+      await deployer.deploy(Officer, admissionsInstance.address, { from: deployerAddress });
+      console.log(`Officer ${i + 1} Deployment successful`);
+    } catch (error) {
+      console.log(`Officer ${i + 1} Deployment failed:`, error);
+    }
   }
 };
