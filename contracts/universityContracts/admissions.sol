@@ -28,10 +28,13 @@ contract Admissions {
         deployer = msg.sender;
     }
 
-    function approveOfficer(address officer) external onlyAdmissionsOfficer {
-        require(registeredAddresses[officer] == 0, "Address is already registered");
-        approvedAdmissionsOfficers.push(officer);
-        registeredAddresses[officer] = 2;
+    // This function now combines registration and approval
+    function registerOfficer(address officerAddress) external {
+        require(msg.sender == officerAddress, "Only the Officer contract can register itself");
+        require(registeredAddresses[officerAddress] == 0, "Officer is already registered");
+
+        registeredAddresses[officerAddress] = 1; // Officer is registered and approved
+        approvedAdmissionsOfficers.push(officerAddress);
     }
 
     function isAdmissionsOfficer(address officer) public view returns (bool) {
