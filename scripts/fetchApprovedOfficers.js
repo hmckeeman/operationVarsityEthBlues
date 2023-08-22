@@ -3,14 +3,16 @@ const Admissions = artifacts.require("Admissions");
 module.exports = async function(callback) {
     try {
         const admissionsInstance = await Admissions.deployed();
+        console.log("Admissions contract instance fetched.");
+
         console.log("Fetching approved officers from Admissions contract...");
-        const result = await admissionsInstance.getAdmissionsOfficers();
-        console.log("Direct result:", result);
+        const officersData = await admissionsInstance.getAdmissionsOfficers();
+        console.log("Raw return from getAdmissionsOfficers:", officersData);
 
-        const count = result['0'].toNumber();
-        const officers = result['1'];
+        if (officersData && officersData[1] && officersData[1].length > 0) {
+            const count = officersData[0].toNumber();
+            const officers = officersData[1];
 
-        if (count > 0) {
             console.log("Number of approved admissions officers:", count);
             console.log("Addresses of approved admissions officers:");
             officers.forEach((officer, index) => {
@@ -24,5 +26,5 @@ module.exports = async function(callback) {
         console.error("Error fetching approved officers:", error);
     }
 
-    callback();  // This ensures the script exits
+    callback();
 };
