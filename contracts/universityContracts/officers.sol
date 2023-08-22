@@ -30,8 +30,11 @@ contract Officer is IERC721Receiver {
     }
 
     constructor(address _admissionsContract) {
-        deployer = msg.sender; // Set the deployer address when deploying the contract
+        deployer = msg.sender;
         admissionsContract = _admissionsContract;
+        
+        // Register the officer upon deployment
+        Admissions(admissionsContract).registerOfficer(address(this));
     }
 
     function onERC721Received(address, address from, uint256 tokenId, bytes calldata) external override returns (bytes4) {
