@@ -5,9 +5,19 @@ module.exports = async function(deployer, network, accounts) {
   // Fetch the deployed Admissions contract
   const admissions = await Admissions.deployed();
 
-  // The address of the Admissions contract is passed as a constructor parameter
-  // to the Applicant contract
-  await deployer.deploy(Applicant, admissions.address);
+  // Number of instances you want to deploy
+  const numberOfInstances = 5;
 
-  console.log("Applicant deployed with the address:", Applicant.address);
+  // An array to keep track of the deployed addresses
+  let deployedAddresses = [];
+
+  for (let i = 0; i < numberOfInstances; i++) {
+    // Deploy the Applicant contract and pass the address of the Admissions contract as a constructor parameter
+    await deployer.deploy(Applicant, admissions.address);
+    deployedAddresses.push(Applicant.address);
+
+    console.log(`Applicant ${i + 1} deployed with the address:`, Applicant.address);
+  }
+
+  console.log("All Applicants deployed. Addresses:", deployedAddresses);
 };

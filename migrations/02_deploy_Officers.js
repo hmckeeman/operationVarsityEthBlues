@@ -20,7 +20,7 @@ module.exports = async function(deployer, network, accounts) {
   const admissionsInstance = await Admissions.deployed();
   
   // Define the number of Officer contracts you want to deploy
-  const numberOfOfficers = 5; 
+  const numberOfOfficers = 3; 
   console.log(`Deploying ${numberOfOfficers} Officer contracts with Admissions contract address: ${admissionsInstance.address}`);
 
   for (let i = 0; i < numberOfOfficers; i++) {
