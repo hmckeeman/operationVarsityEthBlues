@@ -59,4 +59,13 @@ contract Application is ERC721 {
     function getCurrentTokenId() external view returns (uint256) {
         return _tokenIds.current();
     }
+
+    function getAdmissionsContractAddress() external view returns (address) {
+        return admissionsContract;
+    }
+
+    function getApplicantContractAddress() external view returns (address) {
+        return applicantContract;
+    }
+
 }
