@@ -56,4 +56,7 @@ contract Application is ERC721 {
         require(_exists(tokenId), "Application not found");
         return _applications[tokenId];
     }
+    function getCurrentTokenId() external view returns (uint256) {
+        return _tokenIds.current();
+    }
 }
