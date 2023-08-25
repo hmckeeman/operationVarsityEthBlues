@@ -3,35 +3,46 @@ const Admissions = artifacts.require("Admissions");
 
 module.exports = async function(callback) {
     try {
-        // Fetch the deployed Applicant and Admissions contract instances
-        const applicantInstance = await Applicant.deployed();
+        // Fetch the deployed Admissions contract instance
         const admissionsInstance = await Admissions.deployed();
-
-        console.log("Fetching the assigned officer's address...");
-
-        // Fetching the assigned officer's address for the Applicant
-        const officerAddress = await admissionsInstance.getAdmissionsOfficerForApplicant(applicantInstance.address);
         
-        if (officerAddress == '0x0000000000000000000000000000000000000000') {
-            console.error("No officer has been assigned to this applicant yet.");
+        // Fetch all assigned applicants
+        const assignedApplicantsData = await admissionsInstance.getAssignedApplicants();
+        const assignedApplicants = assignedApplicantsData[1];
+        
+        if (assignedApplicants.length === 0) {
+            console.log("No applicants have been assigned yet.");
             callback();
             return;
         }
+        
+        console.log("Approving officers for all assigned applicants...");
 
-        console.log("Granting officer approval...");
+        for (let i = 0; i < assignedApplicants.length; i++) {
+            const applicantAddress = assignedApplicants[i];
+            
+            const officerAddress = await admissionsInstance.getAdmissionsOfficerForApplicant(applicantAddress);
+            
+            if (officerAddress != '0x0000000000000000000000000000000000000000') {
+                // Fetch the specific Applicant contract instance
+                const applicantInstance = await Applicant.at(applicantAddress);
 
-        // Calling the function to grant the officer approval
-        await applicantInstance.grantOfficerApproval(officerAddress);
+                // Grant approval to the assigned officer
+                await applicantInstance.grantOfficerApproval(officerAddress);
+                
+                console.log(`Officer ${officerAddress} approved for Applicant ${applicantAddress}`);
+            } else {
+                console.log(`Applicant ${applicantAddress} has not been assigned to any officer.`);
+            }
+        }
 
         console.log("\n-----------------------------");
-        console.log("Applicant Contract Address:", applicantInstance.address);
-        console.log("Officer Address:", officerAddress);
-        console.log("Approval granted!");
+        console.log("Approval process completed for all assigned applicants!");
         console.log("-----------------------------\n");
 
         callback();
     } catch (error) {
-        console.error("Error granting officer approval:", error);
+        console.error("Error in the approval process:", error);
         callback(error);
     }
 };
