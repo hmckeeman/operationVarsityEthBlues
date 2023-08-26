@@ -1,33 +1,47 @@
 const Application = artifacts.require("Application");
-const Officer = artifacts.require("Officer"); // Assuming you have an Officer contract
 const Admissions = artifacts.require("Admissions");
+const Officer = artifacts.require("Officer");
 
 module.exports = async function(callback) {
     try {
-        // Get accounts
-        const accounts = await web3.eth.getAccounts();
-
-        // Get contract instances
+        console.log("Fetching Application contract instance...");
         const applicationInstance = await Application.deployed();
+        console.log("Fetched. Application Contract Address:", applicationInstance.address);
+
+        console.log("Fetching the associated Applicant Contract...");
+        const applicantContractAddress = await applicationInstance.getApplicantContractAddress();
+        console.log("Fetched. Applicant Contract Address:", applicantContractAddress);
+
+        console.log("Fetching Admissions contract instance...");
         const admissionsInstance = await Admissions.deployed();
+        console.log("Fetched. Admissions Contract Address:", admissionsInstance.address);
 
-        // Get tokenID - For simplicity, let's assume you want to send the application with tokenID = 1
-        const tokenId = 1;
+        console.log("Fetching officer address for the application...");
+        const officerAddress = await admissionsInstance.getAdmissionsOfficerForApplicant(applicantContractAddress);
+        console.log("Fetched. Officer Address for the application:", officerAddress);
 
-        // Get the assigned officer for this application
-        const officerAddress = await admissionsInstance.getAdmissionsOfficerForApplicant(applicationInstance.address);
+        if (officerAddress === "0x0000000000000000000000000000000000000000") {
+            throw new Error("Invalid Officer Address retrieved.");
+        }
         
-        // This assumes that there is an Officer contract at the returned address.
-        // If there isn't, this line will throw an error.
+        console.log("Fetching Officer contract instance using the fetched Officer Address...");
         const officerInstance = await Officer.at(officerAddress);
+        console.log("Fetched. Officer Contract Instance ready.");
+        
+        // For the purpose of this script, I'm assuming you want to transfer the first application.
+        // Adjust the number below if you need a different tokenId.
+        console.log("Fetching current Token ID for the application...");
+        const tokenId = await applicationInstance.getCurrentTokenId();
+        console.log(`Fetched. Current Application Token ID: ${tokenId}`);
+        
+        console.log(`Initiating the transfer of Application with token ID ${tokenId} to officer at address ${officerAddress}...`);
+        await applicationInstance.transferApplicationToOfficerContract(officerAddress, tokenId, { from: accounts[0] });
+        console.log(`Application with token ID ${tokenId} has been transferred to officer at address ${officerAddress}.`);
+        
 
-        // Now, let's send the application to the officer
-        const tx = await applicationInstance.transferApplicationToOfficerContract(officerInstance.address, tokenId, { from: accounts[0] });
-        console.log("Transaction hash:", tx.tx);
-
-        callback();  // Complete the script successfully
     } catch (error) {
-        console.error("Error sending application:", error);
-        callback(error);  // Finish the script with an error
+        console.error("Error encountered:", error);
     }
+
+    callback();
 };
