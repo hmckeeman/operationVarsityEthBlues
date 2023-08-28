@@ -4,6 +4,9 @@ const Officer = artifacts.require("Officer");
 
 module.exports = async function(callback) {
     try {
+        // Fetch the accounts from the Ethereum node
+        const accounts = await web3.eth.getAccounts();
+
         console.log("Fetching Application contract instance...");
         const applicationInstance = await Application.deployed();
         console.log("Fetched. Application Contract Address:", applicationInstance.address);
@@ -31,7 +34,8 @@ module.exports = async function(callback) {
         // For the purpose of this script, I'm assuming you want to transfer the first application.
         // Adjust the number below if you need a different tokenId.
         console.log("Fetching current Token ID for the application...");
-        const tokenId = await applicationInstance.getCurrentTokenId();
+        const tokenIdBN = await applicationInstance.getCurrentTokenId();
+        const tokenId = tokenIdBN.toNumber() > 0 ? tokenIdBN.sub(new web3.utils.BN(1)) : tokenIdBN;
         console.log(`Fetched. Current Application Token ID: ${tokenId}`);
         
         console.log(`Initiating the transfer of Application with token ID ${tokenId} to officer at address ${officerAddress}...`);
