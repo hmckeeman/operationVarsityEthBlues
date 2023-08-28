@@ -22,19 +22,23 @@ module.exports = async function(callback) {
         }
 
         // Display the data for each assigned applicant
-        console.log("\nFetching data for assigned applicants...");
         for (let applicantAddress of assignedFromAdmissions) {
-            const [name, university, ipfsLink, decisionMade, decision] = await officerInstance.viewApplicant(applicantAddress);
-            console.log(`\nApplicant Address: ${applicantAddress}`);
-            console.log(`Name: ${name}`);
-            console.log(`University: ${university}`);
-            console.log(`IPFS Link: ${ipfsLink}`);
-            if (decisionMade) {
-                console.log(`Decision: ${decision}`);
-            } else {
-                console.log("Decision not made yet.");
+            console.log(`\nTrying to fetch details for Applicant Address: ${applicantAddress}`);
+            try {
+                const [name, university, ipfsLink, decisionMade, decision] = await officerInstance.viewApplicant(applicantAddress);
+                console.log(`Name: ${name}`);
+                console.log(`University: ${university}`);
+                console.log(`IPFS Link: ${ipfsLink}`);
+                if (decisionMade) {
+                    console.log(`Decision: ${decision}`);
+                } else {
+                    console.log("Decision not made yet.");
+                }
+            } catch (err) {
+                console.error(`Error fetching details for ${applicantAddress}:`, err);
             }
         }
+        
 
     } catch (error) {
         console.error("\nError encountered:", error);
