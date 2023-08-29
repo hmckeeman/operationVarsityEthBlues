@@ -1,52 +1,38 @@
-const Officer = artifacts.require("Officer");
-const Admissions = artifacts.require("Admissions");
+const AdmissionsContract = artifacts.require("Admissions");
+const OfficerContract = artifacts.require("Officer");
 
 module.exports = async function(callback) {
     try {
-        // Instantiate the Officer contract
-        const officerInstance = await Officer.deployed();
-        console.log("\nOfficer Contract Address:", officerInstance.address);
+        // 1. Fetch deployed contracts
+        const admissions = await AdmissionsContract.deployed();
+        const officer = await OfficerContract.deployed();
 
-        // Instantiate the Admissions contract
-        const admissionsInstance = await Admissions.deployed();
-        console.log("\nAdmissions Contract Address:", admissionsInstance.address);
+        // 2. Log deployed addresses
+        console.log("Officer Contract Address:", officer.address);
+        console.log("Admissions Contract Address:", admissions.address);
 
-        // Fetch the assigned applicants from the Admissions contract
-        const applicants = await officerInstance.getAssignedApplicants();
-        const assignedFromOfficers = applicants['0'];
-        console.log("\nAssigned applicants from Officers Contract :", assignedFromOfficers);
+        // 3. Fetch applicants assigned to the officer
+        let officerData = await officer.getAssignedApplicants();
+        let admissionsData = await admissions.getApplicantsForOfficer(officer.address);
 
-        // Fetch the assigned applicants from the Admissions contract
-        const result = await admissionsInstance.getApplicantsForOfficer(officerInstance.address);
-        const assignedFromAdmissions = result['0'];
-        console.log("\nAssigned applicants from Admissions Contract:", assignedFromAdmissions);
+        let officerApplicants = officerData['0'];
+        let admissionsApplicants = admissionsData['0'];
 
-        if (!assignedFromAdmissions || assignedFromAdmissions.length === 0) {
-            console.log("\nNo applicants assigned from Admissions contract.");
-            return; // If there are no assigned applicants, we can exit early.
+        console.log("Applicants assigned from Officer Contract:", officerApplicants, officerApplicants.length);
+        console.log("Applicants assigned from Admissions Contract:", admissionsApplicants, admissionsApplicants.length);
+
+        // 4. Fetch application details for each applicant
+        for (const applicantAddress of officerApplicants) {
+            const applicationData = await officer.viewApplicant(applicantAddress);
+            console.log(`Application details for applicant ${applicantAddress}:`);
+            console.log("Name:", applicationData[0]);
+            console.log("University:", applicationData[1]);
+            console.log("IPFS Link:", applicationData[2]);
+            console.log("Decision Made:", applicationData[3]);
+            console.log("Decision:", applicationData[4]);
         }
-
-        // Display the data for each assigned applicant
-        for (let applicantAddress of assignedFromAdmissions) {
-            console.log(`\nTrying to fetch details for Applicant Address: ${applicantAddress}`);
-            try {
-                const [name, university, ipfsLink, decisionMade, decision] = await officerInstance.viewApplicant(applicantAddress);
-                console.log(`Name: ${name}`);
-                console.log(`University: ${university}`);
-                console.log(`IPFS Link: ${ipfsLink}`);
-                if (decisionMade) {
-                    console.log(`Decision: ${decision}`);
-                } else {
-                    console.log("Decision not made yet.");
-                }
-            } catch (err) {
-                console.error(`Error fetching details for ${applicantAddress}:`, err);
-            }
-        }
-        
-
     } catch (error) {
-        console.error("\nError encountered:", error);
+        console.error("An error occurred:", error);
     }
 
     callback();
