@@ -12,9 +12,14 @@ module.exports = async function(callback) {
         console.log("\nAdmissions Contract Address:", admissionsInstance.address);
 
         // Fetch the assigned applicants from the Admissions contract
+        const applicants = await officerInstance.getAssignedApplicants();
+        const assignedFromOfficers = applicants['0'];
+        console.log("\nAssigned applicants from Officers Contract :", assignedFromOfficers);
+
+        // Fetch the assigned applicants from the Admissions contract
         const result = await admissionsInstance.getApplicantsForOfficer(officerInstance.address);
         const assignedFromAdmissions = result['0'];
-        console.log("\nAssigned applicants from Admissions:", assignedFromAdmissions);
+        console.log("\nAssigned applicants from Admissions Contract:", assignedFromAdmissions);
 
         if (!assignedFromAdmissions || assignedFromAdmissions.length === 0) {
             console.log("\nNo applicants assigned from Admissions contract.");
