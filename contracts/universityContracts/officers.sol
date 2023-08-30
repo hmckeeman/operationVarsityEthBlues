@@ -7,6 +7,8 @@ import "../universityContracts/admissions.sol";
 import "../applicantContracts/applicant.sol"; // Import the Applicant contract
 
 contract Officer is IERC721Receiver {
+    event OfficerDeployed(address officerAddress);
+
     struct ApplicantData {
         string name;
         string university;
@@ -35,6 +37,7 @@ contract Officer is IERC721Receiver {
         
         // Register the officer upon deployment
         Admissions(admissionsContract).registerOfficer(address(this));
+        emit OfficerDeployed(address(this));
     }
 
     function onERC721Received(address, address from, uint256 tokenId, bytes calldata) external override returns (bytes4) {
