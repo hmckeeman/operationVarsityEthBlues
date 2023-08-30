@@ -7,7 +7,7 @@ import "../universityContracts/admissions.sol";
 import "../applicantContracts/applicant.sol"; // Import the Applicant contract
 
 contract Officer is IERC721Receiver {
-    event OfficerDeployed(address officerAddress);
+    event OfficerDeployed(address indexed officerAddress);
 
     struct ApplicantData {
         string name;
