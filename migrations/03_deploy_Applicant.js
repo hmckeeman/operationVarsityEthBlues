@@ -1,5 +1,6 @@
 const Admissions = artifacts.require("Admissions");
 const Applicant = artifacts.require("Applicant");
+const fs = require('fs');  // Add this line to include the File System module
 
 module.exports = async function(deployer, network, accounts) {
   // Fetch the deployed Admissions contract
@@ -19,5 +20,8 @@ module.exports = async function(deployer, network, accounts) {
     console.log(`Applicant ${i + 1} deployed with the address:`, Applicant.address);
   }
 
-  console.log("All Applicants deployed. Addresses:", deployedAddresses);
+  // Save the deployed addresses to a JSON file
+  fs.writeFileSync('deployedApplicantAddresses.json', JSON.stringify(deployedAddresses, null, 2));
+
+  console.log("All Applicants deployed. Addresses saved to deployedApplicantAddresses.json");
 };
