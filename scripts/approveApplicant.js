@@ -27,10 +27,16 @@ module.exports = async function(callback) {
         const officerInstance = await Officer.at(officerAddress);
         console.log("Officer instance: ", officerInstance);
 
+        // Decide which account to use for calling the contract method.
+        // Replace "accountIndex" with the index number of the account you want to use.
+        const accountIndex = 0; // You can change this to another index in the accounts array
+        const accountToUse = accounts[accountIndex];
+        console.log(`Using account at index ${accountIndex}: ${accountToUse}`);
+
         for (const applicantAddress of deployedApplicantAddresses) {
             // Invoke the "acceptApplicant" method of the deployed Officer contract
             console.log(`Approving applicant at address ${applicantAddress}...`);
-            const txReceipt = await officerInstance.acceptApplicant(applicantAddress, { from: accounts[0] });
+            const txReceipt = await officerInstance.acceptApplicant(applicantAddress, { from: accountToUse });
             console.log(`Transaction receipt for Applicant ${applicantAddress}: `, txReceipt);
         }
 
