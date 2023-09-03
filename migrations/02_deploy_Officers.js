@@ -11,7 +11,7 @@ module.exports = async function(deployer, network, accounts) {
   }
 
   const deployedOfficerAddresses = []; // Array to hold deployed Officer addresses
-
+  
   await deployer.deploy(Admissions, 1000, { from: deployerAddress });
   const admissionsInstance = await Admissions.deployed();
 
@@ -20,6 +20,9 @@ module.exports = async function(deployer, network, accounts) {
     await deployer.deploy(Officer, admissionsInstance.address, { from: officerAccount });
     const officerInstance = await Officer.deployed();
     deployedOfficerAddresses.push(officerInstance.address); // Add deployed Officer address to the array
+
+    // Log the deployed Officer's address and the account that deployed it
+    console.log(`Officer ${i + 1} deployed with the address: ${officerInstance.address} by the account: ${officerAccount}`);
   }
 
   // Write the deployed Officer addresses to a JSON file
