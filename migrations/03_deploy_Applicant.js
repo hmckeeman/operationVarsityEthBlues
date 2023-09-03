@@ -7,7 +7,7 @@ module.exports = async function(deployer, network, accounts) {
   const admissions = await Admissions.deployed();
 
   // Number of instances you want to deploy
-  const numberOfInstances = 5;
+  const numberOfInstances = 4;
 
   // An array to keep track of the deployed addresses
   let deployedAddresses = [];
