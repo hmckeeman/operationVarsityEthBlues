@@ -19,31 +19,34 @@ module.exports = async function(callback) {
         const deployedApplicantAddresses = JSON.parse(fs.readFileSync('deployedApplicantAddresses.json', 'utf8'));
         console.log("Deployed Applicant Addresses: ", deployedApplicantAddresses);
 
-        // Use the first Officer address as an example
-        const officerAddress = deployedOfficerAddresses[0];
+        // Using the specified Officer address
+        const officerAddress = "0x875625D126619c6842B6e10f3EaDdCa357110759";  // You can read this dynamically too, if needed
         console.log("Using Officer at address: ", officerAddress);
+
+        // Search for the deployerAccount in the available accounts
+        const deployerAccount = "0x93a2109C4C2AeE626722CCEC9138929d94774407";  // You can read this dynamically too, if needed
+        const accountToUse = accounts.find(account => account.toLowerCase() === deployerAccount.toLowerCase());
+
+        if (!accountToUse) {
+            throw new Error(`Deployer account ${deployerAccount} not found among available accounts`);
+        }
+        console.log(`Using deployer account: ${accountToUse}`);
 
         // Use Truffle's "at" function to get an instance of the deployed contract at the specific address
         const officerInstance = await Officer.at(officerAddress);
         console.log("Officer instance: ", officerInstance);
 
-        // Decide which account to use for calling the contract method.
-        // Replace "accountIndex" with the index number of the account you want to use.
-        const accountIndex = 0; // You can change this to another index in the accounts array
-        const accountToUse = accounts[accountIndex];
-        console.log(`Using account at index ${accountIndex}: ${accountToUse}`);
-
+        // Loop through each deployed Applicant address to approve them
         for (const applicantAddress of deployedApplicantAddresses) {
-            // Invoke the "acceptApplicant" method of the deployed Officer contract
             console.log(`Approving applicant at address ${applicantAddress}...`);
             const txReceipt = await officerInstance.acceptApplicant(applicantAddress, { from: accountToUse });
             console.log(`Transaction receipt for Applicant ${applicantAddress}: `, txReceipt);
         }
 
         console.log("Finished approving applicants.");
-        callback(); // Exit the script successfully
+        callback();  // Exit the script successfully
     } catch (error) {
         console.error("Error in approving applicant: ", error);
-        callback(error); // Exit the script with an error state
+        callback(error);  // Exit the script with an error state
     }
 };
