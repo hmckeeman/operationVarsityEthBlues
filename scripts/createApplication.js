@@ -11,7 +11,7 @@ module.exports = async function(callback) {
         // Fetch the deployed Application contract instance
         const applicationInstance = await Application.deployed();
 
-        // Call the function to create the application
+        // Create the application
         console.log("Creating application...");
         await applicationInstance.createApplication(applicantName, universityName, ipfsLink);
 
