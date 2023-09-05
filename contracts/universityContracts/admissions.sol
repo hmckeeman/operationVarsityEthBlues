@@ -33,7 +33,7 @@ contract Admissions {
         require(msg.sender == officerAddress, "Only the Officer contract can register itself");
         require(registeredAddresses[officerAddress] == 0, "Officer is already registered");
 
-        registeredAddresses[officerAddress] = 1; // Officer is registered and approved
+        registeredAddresses[officerAddress] = 2; // Officer is registered and approved
         approvedAdmissionsOfficers.push(officerAddress);
     }
 
