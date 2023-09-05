@@ -4,9 +4,9 @@ const Application = artifacts.require("Application");
 module.exports = async function(callback) {
     try {
         // Predefined data for the application
-        const applicantName = "John Doe"; // Replace with real name
-        const universityName = "MIT"; // Replace with real university name
-        const ipfsLink = "QmXYZ..."; // Replace with the real IPFS link
+        const applicantName = "John Doe";
+        const universityName = "MIT";
+        const ipfsLink = "QmXYZ...";
 
         // Fetch the deployed Application contract instance
         const applicationInstance = await Application.deployed();
@@ -26,16 +26,16 @@ module.exports = async function(callback) {
         const admissionsAddress = await applicationInstance.getAdmissionsContractAddress();
         const applicantAddress = await applicationInstance.getApplicantContractAddress();
 
-        // Save the application's address to a JSON file
+        // Save the application's address to a separate JSON file (if needed)
         const applicationAddress = applicationInstance.address;
-        let deployedApplicantAddresses = [];
+        let deployedApplicationAddresses = [];
 
-        if (fs.existsSync('deployedApplicantAddresses.json')) {
-            deployedApplicantAddresses = JSON.parse(fs.readFileSync('deployedApplicantAddresses.json', 'utf8'));
+        if (fs.existsSync('deployedApplicationAddresses.json')) {
+            deployedApplicationAddresses = JSON.parse(fs.readFileSync('deployedApplicationAddresses.json', 'utf8'));
         }
 
-        deployedApplicantAddresses.push(applicationAddress);
-        fs.writeFileSync('deployedApplicantAddresses.json', JSON.stringify(deployedApplicantAddresses));
+        deployedApplicationAddresses.push(applicationAddress);
+        fs.writeFileSync('deployedApplicationAddresses.json', JSON.stringify(deployedApplicationAddresses));
 
         // Log the relevant information
         console.log("\n-----------------------------");
