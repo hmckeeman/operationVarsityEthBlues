@@ -2,8 +2,6 @@ const fs = require('fs');
 
 module.exports = async function(callback) {
     try {
-        console.log("Starting to approve applicants.");
-
         // Use Truffle's native "artifacts" object to get the deployed contract instances
         const Officer = artifacts.require("Officer");
 
@@ -23,6 +21,10 @@ module.exports = async function(callback) {
         const officerAddress = "0x875625D126619c6842B6e10f3EaDdCa357110759";  // You can read this dynamically too, if needed
         console.log("Using Officer at address: ", officerAddress);
 
+        // Use the specific applicant address you are interested in
+        const specificApplicantAddress = deployedApplicantAddresses[deployedApplicantAddresses.length - 1];  // Taking the last address in this case
+        console.log("Approving specific applicant at address: ", specificApplicantAddress);
+
         // Search for the deployerAccount in the available accounts
         const deployerAccount = "0x93a2109C4C2AeE626722CCEC9138929d94774407";  // You can read this dynamically too, if needed
         const accountToUse = accounts.find(account => account.toLowerCase() === deployerAccount.toLowerCase());
@@ -36,14 +38,12 @@ module.exports = async function(callback) {
         const officerInstance = await Officer.at(officerAddress);
         console.log("Officer instance: ", officerInstance);
 
-        // Loop through each deployed Applicant address to approve them
-        for (const applicantAddress of deployedApplicantAddresses) {
-            console.log(`Approving applicant at address ${applicantAddress}...`);
-            const txReceipt = await officerInstance.acceptApplicant(applicantAddress, { from: accountToUse });
-            console.log(`Transaction receipt for Applicant ${applicantAddress}: `, txReceipt);
-        }
+        // Approve the specific applicant
+        console.log(`Approving applicant at address ${specificApplicantAddress}...`);
+        const txReceipt = await officerInstance.acceptApplicant(specificApplicantAddress, { from: accountToUse });
+        console.log(`Transaction receipt for Applicant ${specificApplicantAddress}: `, txReceipt);
 
-        console.log("Finished approving applicants.");
+        console.log("Finished approving applicant.");
         callback();  // Exit the script successfully
     } catch (error) {
         console.error("Error in approving applicant: ", error);
