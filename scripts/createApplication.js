@@ -3,41 +3,26 @@ const Application = artifacts.require("Application");
 
 module.exports = async function(callback) {
     try {
-        // Predefined data for the application
         const applicantName = "John Doe";
         const universityName = "MIT";
         const ipfsLink = "QmXYZ...";
 
-        // Fetch the deployed Application contract instance
         const applicationInstance = await Application.deployed();
-
-        // Create the application
         console.log("Creating application...");
         await applicationInstance.createApplication(applicantName, universityName, ipfsLink);
 
-        // Fetch the recently created token ID
         const tokenIdBN = await applicationInstance.getCurrentTokenId();
         const tokenId = tokenIdBN.toNumber() > 0 ? tokenIdBN.sub(new web3.utils.BN(1)) : tokenIdBN;
 
-        // Fetch the application details using the token ID
         const applicationData = await applicationInstance.getApplication(tokenId);
 
-        // Fetch other necessary data
         const admissionsAddress = await applicationInstance.getAdmissionsContractAddress();
         const applicantAddress = await applicationInstance.getApplicantContractAddress();
-
-        // Save the application's address to a separate JSON file (if needed)
         const applicationAddress = applicationInstance.address;
-        let deployedApplicationAddresses = [];
 
-        if (fs.existsSync('deployedApplicationAddresses.json')) {
-            deployedApplicationAddresses = JSON.parse(fs.readFileSync('deployedApplicationAddresses.json', 'utf8'));
-        }
+        // Replace the entire content of the JSON file with the new application address.
+        fs.writeFileSync('deployedApplicationAddresses.json', JSON.stringify([applicationAddress]));
 
-        deployedApplicationAddresses.push(applicationAddress);
-        fs.writeFileSync('deployedApplicationAddresses.json', JSON.stringify(deployedApplicationAddresses));
-
-        // Log the relevant information
         console.log("\n-----------------------------");
         console.log("Application Contract Address:", applicationAddress);
         console.log("Admissions Contract Address:", admissionsAddress);
@@ -48,7 +33,6 @@ module.exports = async function(callback) {
         console.log("Token ID of Application:", tokenId.toString());
         console.log("-----------------------------\n");
 
-        // Finish the script
         callback();
     } catch (error) {
         console.error("Error creating application:", error);
