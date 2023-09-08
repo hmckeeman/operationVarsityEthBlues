@@ -31,12 +31,12 @@ module.exports = async function(callback) {
 
         const txReceipt = await officerInstance.denyApplicant(specificApplicantAddress, { from: accountToUse });
 
-        console.log("\n========== Transaction Details ===========");
+        console.log("\n========== Transaction Details ============");
         console.log(`Transaction Hash: ${txReceipt.tx}`);
         console.log(`Block Number: ${txReceipt.receipt.blockNumber}`);
         console.log(`Gas Used: ${txReceipt.receipt.gasUsed}`);
         console.log(`Status: ${txReceipt.receipt.status ? 'Successful' : 'Failed'}`);
-        console.log("========================================");
+        console.log("==========================================");
 
         console.log("\nFinished denying applicant.");
         callback();

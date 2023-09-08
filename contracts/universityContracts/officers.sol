@@ -74,7 +74,7 @@ contract Officer is IERC721Receiver {
     }
 
     function makeDecision(address applicantContract, string memory decision) internal {
-        require(isApplicantAssigned(applicantContract), "You can only approve applications of applicants you have been assigned to");
+        require(isApplicantAssigned(applicantContract), "You can only decide applications of applicants you have been assigned to");
         require(bytes(decision).length > 0, "Decision cannot be empty");
         ApplicantData storage applicantData = applicantsData[applicantContract];
         require(!applicantData.decisionMade, "Decision already made for this applicant");
