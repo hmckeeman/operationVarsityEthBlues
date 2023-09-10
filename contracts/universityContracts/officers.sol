@@ -90,7 +90,10 @@ contract Officer is IERC721Receiver {
         } else if (keccak256(bytes(decision)) == keccak256(bytes("waitlisted"))) {
             Admissions(admissionsContract).addWaitlistedApplicant(applicantContract);
         }
-
+        else if (keccak256(bytes(decision)) == keccak256(bytes("denied"))) {
+            Admissions(admissionsContract).addDeniedApplicant(applicantContract);
+        }
+        
         // Remove the applicant's address from the officer's assigned applicants list
         Admissions(admissionsContract).removeAssignedApplicant(address(this), applicantContract);
     }
