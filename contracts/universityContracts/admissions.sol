@@ -10,6 +10,8 @@ contract Admissions {
     address[] private newStudents;
     address[] private acceptedApplicants;
     address[] private waitlistedApplicants;
+    address[] private deniedApplicants;
+
     uint256 private maxStudents;
     
     mapping(address => address) private applicantToOfficer;
@@ -72,7 +74,11 @@ contract Admissions {
     function getWaitlistedApplicants() external view returns (uint256, address[] memory) {
         return (waitlistedApplicants.length, waitlistedApplicants);
     }
-    
+
+    function getDeniedApplicants() external view returns (uint256, address[] memory) {
+        return (deniedApplicants.length, deniedApplicants);
+    }
+
     function getAdmissionsOfficerForApplicant(address applicant) public view returns (address) {
         return applicantToOfficer[applicant];
     }
@@ -94,6 +100,10 @@ contract Admissions {
 
     function addWaitlistedApplicant(address applicant) public onlyAdmissionsOfficer {
         waitlistedApplicants.push(applicant);
+    }
+
+    function addDeniedApplicant(address applicant) public onlyAdmissionsOfficer {
+        deniedApplicants.push(applicant);
     }
 
     function addNewStudent(address applicant) external {
