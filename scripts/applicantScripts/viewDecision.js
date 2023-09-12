@@ -16,14 +16,21 @@ module.exports = async function(callback) {
     console.log("==============================================");
 
     // Fetch the Applicant contract instance
-    console.log("[1/2] Fetching Applicant contract instance...");
+    console.log("[1/3] Fetching Applicant contract instance...");
     const applicantInstance = await Applicant.at(applicantAddress);
 
-    // Fetch the admission decision for the applicant
-    console.log("[2/2] Fetching admission decision...");
-    const decision = await applicantInstance.admissionDecision.call();
+    // Check if decision has been made
+    console.log("[2/3] Checking decision status...");
+    const hasDecisionBeenMade = await applicantInstance.decisionReceived.call();
 
-    console.log("Admission Decision for Applicant:", decision);
+    if(!hasDecisionBeenMade) {
+      console.log("Admission Decision for Applicant: Decision not yet made");
+    } else {
+      // Fetch the admission decision for the applicant
+      console.log("[3/3] Fetching admission decision...");
+      const decision = await applicantInstance.admissionDecision.call();
+      console.log("Admission Decision for Applicant:", decision);
+    }
 
     callback(); // This will indicate that the script has completed its execution.
   } catch (error) {
