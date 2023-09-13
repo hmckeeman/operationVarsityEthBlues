@@ -3,12 +3,9 @@ const Admissions = artifacts.require("Admissions");
 contract("Admissions", (accounts) => {
     let admissions;
 
-    // Address of the already deployed Admissions contract
-    const DEPLOYED_ADDRESS = "0x7812142c200B417E3A5084386106c2353250b1f8"; // Replace with your contract address
-
-    // Get the already deployed contract instance before running tests
+    // Fetching the deployed instance instead of deploying a new one
     before(async () => {
-        admissions = await Admissions.at(DEPLOYED_ADDRESS);
+        admissions = await Admissions.deployed();
     });
 
     describe("Deployment", () => {
