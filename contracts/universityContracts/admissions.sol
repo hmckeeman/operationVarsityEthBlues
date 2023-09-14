@@ -47,6 +47,10 @@ contract Admissions {
         return registeredAddresses[account] == 1;
     }
 
+    function getDeployer() public view returns (address) {
+        return deployer;
+    }
+
     function getMaxStudents() public view returns (uint256) {
         return maxStudents;
     }
