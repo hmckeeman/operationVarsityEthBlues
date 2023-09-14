@@ -1,51 +1,28 @@
 const Admissions = artifacts.require("Admissions");
-const Officers = artifacts.require("Officers");
-const Applicant = artifacts.require("Applicant");
+
+const fs = require('fs');
+
+// Importing the JSON files with the addresses.
+const deployedOfficerAddresses = require('../deployedOfficerAddresses.json');
+const deployedApplicantAddresses = require('../deployedApplicantAddresses.json');
 
 contract("Deployment Addresses Test", (accounts) => {
-    let admissions, officersInstances = [], applicantInstances = [];
+  
+  it("checks if all contracts were deployed by different accounts", async () => {
+    const admissionsInstance = await Admissions.deployed();
 
-    before(async () => {
-        // Get the deployed instance of Admissions
-        admissions = await Admissions.deployed();
-        
-        // Assuming there's a way to distinguish or fetch the deployed instances of Officers and Applicant contracts
-        // Here's a hypothetical way to do it:
+    // Retrieve deployer of Admissions contract
+    const admissionsDeployer = await admissionsInstance.getDeployer();
 
-        // Get the deployed instances of Officers
-        for(let i = 0; i < 3; i++) {
-            const officer = await Officers.at(addressOfTheOfficerInstance[i]); // You need to provide the address of each Officer instance
-            officersInstances.push(officer);
-        }
+    // Check if deployer address is in one of the accounts
+    assert(accounts.includes(admissionsDeployer), "Admissions contract was not deployed by one of the accounts");
 
-        // Get the deployed instances of Applicant
-        for(let j = 0; j < 4; j++) {
-            const applicant = await Applicant.at(addressOfTheApplicantInstance[j]); // You need to provide the address of each Applicant instance
-            applicantInstances.push(applicant);
-        }
-    });
+    // Check uniqueness among all deployed addresses:
+    const allDeployedAddresses = [...deployedOfficerAddresses, ...deployedApplicantAddresses, admissionsDeployer];
+    const uniqueAddresses = [...new Set(allDeployedAddresses)];
 
-    it("checks if all contracts were deployed by different accounts", async () => {
-        const deployerAddresses = [];
-
-        // Get the deployer address for Admissions
-        const admissionsDeployer = await admissions.owner(); 
-        deployerAddresses.push(admissionsDeployer);
-
-        // Get deployer addresses for all Officer instances
-        for(const officer of officersInstances) {
-            const officerDeployer = await officer.owner();
-            deployerAddresses.push(officerDeployer);
-        }
-
-        // Get deployer addresses for all Applicant instances
-        for(const applicant of applicantInstances) {
-            const applicantDeployer = await applicant.owner();
-            deployerAddresses.push(applicantDeployer);
-        }
-
-        // Check for unique deployer addresses
-        const uniqueAddresses = [...new Set(deployerAddresses)];
-        assert.equal(uniqueAddresses.length, deployerAddresses.length, "Not all contracts were deployed by unique accounts");
-    });
+    assert.equal(allDeployedAddresses.length, uniqueAddresses.length, "All contracts were not deployed by unique accounts");
+  });
+  
 });
+
