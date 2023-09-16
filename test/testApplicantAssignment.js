@@ -1,15 +1,23 @@
 const Admissions = artifacts.require("Admissions");
+const applicantAddresses = require('../deployedApplicantAddresses.json');  // Update the path if needed
+const officerAddresses = require('../deployedOfficerAddresses.json'); // Load the officer addresses
 
-contract("Applicant Assignment Test", (accounts) => {
+contract('Admissions Contract Test', (accounts) => {
+    let admissionsContract;
 
-  it("checks if all applicants have been assigned an admissions officer", async () => {
-    const admissionsInstance = await Admissions.deployed();
+    before(async () => {
+        admissionsContract = await Admissions.deployed();
+    });
 
-    // Assuming you've added applicants and officers in a previous test or setup
-    const totalApplicants = (await admissionsInstance.getUnassignedApplicants())[1].length + (await admissionsInstance.getAssignedApplicants())[1].length;
-    const assignedApplicants = (await admissionsInstance.getAssignedApplicants())[1].length;
-
-    assert.equal(totalApplicants, assignedApplicants, "Not all applicants were assigned");
-  });
-
+    it('should have assigned all applicants from the JSON to an officer', async () => {
+        for (const applicant of applicantAddresses) {
+            const assignedOfficer = await admissionsContract.getAssignedOfficer(applicant); // Using getAssignedOfficer instead of getAdmissionsOfficerForApplicant
+            
+            // Check if there's an officer assigned
+            assert.notEqual(assignedOfficer, '0x0000000000000000000000000000000000000000', `No officer assigned for applicant: ${applicant}`);
+            
+            // Check if the assigned officer is in the list of deployed officers
+            assert(officerAddresses.includes(assignedOfficer), `Applicant at ${applicant} was assigned to an unknown officer: ${assignedOfficer}`);
+        }
+    });
 });
