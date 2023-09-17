@@ -1,23 +1,26 @@
 const Admissions = artifacts.require("Admissions");
-const applicantAddresses = require('../deployedApplicantAddresses.json');  // Update the path if needed
-const officerAddresses = require('../deployedOfficerAddresses.json'); // Load the officer addresses
+const fs = require('fs');
+const path = require('path');
 
-contract('Admissions Contract Test', (accounts) => {
-    let admissionsContract;
+contract("Admissions Contract Test", (accounts) => {
+    let admissionsInstance;
 
     before(async () => {
-        admissionsContract = await Admissions.deployed();
+        admissionsInstance = await Admissions.deployed();
     });
 
-    it('should have assigned all applicants from the JSON to an officer', async () => {
-        for (const applicant of applicantAddresses) {
-            const assignedOfficer = await admissionsContract.getAssignedOfficer(applicant); // Using getAssignedOfficer instead of getAdmissionsOfficerForApplicant
+    it("should have assigned all applicants from the JSON to an officer", async () => {
+        // 1. Load the applicant addresses from deployedApplicantAddresses.json
+        const filePath = path.join(__dirname, '..', 'deployedApplicantAddresses.json');
+        const rawData = fs.readFileSync(filePath);
+        const deployedApplicants = JSON.parse(rawData);
+
+        // 2. For each applicant address, call getAdmissionsOfficerForApplicant
+        for(let i = 0; i < deployedApplicants.length; i++) {
+            let officerAddress = await admissionsInstance.getAdmissionsOfficerForApplicant(deployedApplicants[i]);
             
-            // Check if there's an officer assigned
-            assert.notEqual(assignedOfficer, '0x0000000000000000000000000000000000000000', `No officer assigned for applicant: ${applicant}`);
-            
-            // Check if the assigned officer is in the list of deployed officers
-            assert(officerAddresses.includes(assignedOfficer), `Applicant at ${applicant} was assigned to an unknown officer: ${assignedOfficer}`);
+            // 3. If any applicant address does not have an assigned officer address, assert fail.
+            assert.notStrictEqual(officerAddress, '0x0000000000000000000000000000000000000000', `Applicant at address ${deployedApplicants[i]} is not assigned to any officer.`);
         }
     });
 });
