@@ -1,4 +1,6 @@
 const AdmissionsContract = artifacts.require("Admissions");
+const fs = require('fs');
+const path = require('path');
 
 module.exports = async (callback) => {
   try {
@@ -9,20 +11,25 @@ module.exports = async (callback) => {
     const admissionsInstance = await AdmissionsContract.deployed();
     console.log("Contract instance loaded successfully.");
 
-    // Use your logic to fetch officer assignments, etc.
-    console.log("Fetching assigned applicants...");
-    const result = await admissionsInstance.getAssignedApplicants(); // Replace with your actual function
-    
-    const numberOfApplicants = result[0].toNumber();
-    const assignedOfficers = result[1];
+    // Load deployed addresses from JSON files
+    const applicantFilePath = path.join(__dirname, '..', 'deployedApplicantAddresses.json');
+    const officerFilePath = path.join(__dirname, '..', 'deployedOfficerAddresses.json');
+    const applicantAddresses = JSON.parse(fs.readFileSync(applicantFilePath));
+    const officerAddresses = JSON.parse(fs.readFileSync(officerFilePath));
 
-    console.log(`Total number of applicants: ${numberOfApplicants}`);
-    console.log("Assigned applicants:", assignedOfficers);
+    // Log roles for each address
+    for (let address of applicantAddresses) {
+      if (officerAddresses.includes(address)) {
+        console.log(`Address ${address} is both an applicant and an officer`);
+      } else {
+        console.log(`Address ${address} is an applicant`);
+      }
+    }
 
-    if (numberOfApplicants === assignedOfficers.length) {
-      console.log("All applicants have been successfully assigned an officer.");
-    } else {
-      console.error(`Mismatch: Expected ${numberOfApplicants} assignments but got ${assignedOfficers.length}.`);
+    for (let address of officerAddresses) {
+      if (!applicantAddresses.includes(address)) {
+        console.log(`Address ${address} is an officer`);
+      }
     }
 
     console.log("Script execution completed.");

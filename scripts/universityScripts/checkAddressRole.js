@@ -1,15 +1,24 @@
 const AdmissionsContract = artifacts.require("Admissions");
 const fs = require('fs');
-const path = require('path');
 
-module.exports = async function(callback) {
+module.exports = async (callback) => {
   try {
-    // Connect to the deployed contract
+    console.log("Starting the script...");
+
+    // Load contract instance
+    console.log("Loading Admissions contract instance...");
     const admissionsInstance = await AdmissionsContract.deployed();
+    console.log("Contract instance loaded successfully.");
 
     // Load deployed addresses from JSON files
-    const applicantFilePath = path.join(__dirname, '..', 'deployedApplicantAddresses.json');
-    const officerFilePath = path.join(__dirname, '..', 'deployedOfficerAddresses.json');
+    const applicantFilePath = 'deployedApplicantAddresses.json'; // Modify the path if needed
+    const officerFilePath = 'deployedOfficerAddresses.json'; // Modify the path if needed
+    
+    if (!fs.existsSync(applicantFilePath) || !fs.existsSync(officerFilePath)) {
+      console.error("JSON files not found in the main project directory.");
+      return callback();
+    }
+
     const applicantAddresses = JSON.parse(fs.readFileSync(applicantFilePath));
     const officerAddresses = JSON.parse(fs.readFileSync(officerFilePath));
 
@@ -27,6 +36,8 @@ module.exports = async function(callback) {
         console.log(`Address ${address} is an officer`);
       }
     }
+
+    console.log("Script execution completed.");
 
   } catch (error) {
     console.error("Error encountered:", error);
