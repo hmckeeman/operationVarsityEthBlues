@@ -17,7 +17,7 @@ module.exports = async (callback) => {
     const assignedOfficers = result[1];
 
     console.log(`Total number of applicants: ${numberOfApplicants}`);
-    console.log("Assigned officers:", assignedOfficers);
+    console.log("Assigned applicants:", assignedOfficers);
 
     if (numberOfApplicants === assignedOfficers.length) {
       console.log("All applicants have been successfully assigned an officer.");
