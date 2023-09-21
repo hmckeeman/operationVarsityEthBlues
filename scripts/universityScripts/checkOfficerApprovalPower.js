@@ -1,19 +1,25 @@
+const fs = require('fs');
 const Officer = artifacts.require("Officer");
-const Applicant = artifacts.require("Applicant");
-const Admissions = artifacts.require("Admissions");
 
 module.exports = async function(callback) {
   try {
-    // Get the deployed instances of Officer, Applicant, and Admissions contracts
-    const officerInstance = await Officer.deployed();
-    const admissionsInstance = await Admissions.deployed();
+    // Load the deployed Officer contract instance
+    const officerAddresses = JSON.parse(fs.readFileSync('deployedOfficerAddresses.json', 'utf8'));
+    const officerAddress = officerAddresses[0]; // Assuming you have only one Officer contract deployed
+    const officerInstance = await Officer.at(officerAddress);
 
-    // Deploy a new Applicant contract that is not assigned to any officer
-    const unauthorizedApplicantInstance = await Applicant.new(admissionsInstance.address);
+    // Get the assigned applicants
+    const assignedApplicantsObject = await officerInstance.getAssignedApplicants();
+    const assignedApplicants = assignedApplicantsObject[0];
 
-    // Attempt to approve an unauthorized applicant
+    console.log(`Assigned applicants to Officer at ${officerAddress}:`);
+    for (let applicant of assignedApplicants) {
+        console.log(applicant);
+    }
+
+    // Attempt to approve an unauthorized applicant (address 0x000000000000000)
     try {
-      await officerInstance.acceptApplicant(unauthorizedApplicantInstance.address);
+      await officerInstance.approveApplicant("0x0000000000000000000000000000000000000000");
       console.log("Test failed: Officer was able to approve an unauthorized applicant.");
     } catch (error) {
       // Check that the error message confirms unauthorized access
