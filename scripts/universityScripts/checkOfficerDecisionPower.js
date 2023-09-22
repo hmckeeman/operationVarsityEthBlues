@@ -23,12 +23,12 @@ module.exports = async function(callback) {
     // Attempt to approve an unauthorized applicant (address 0x000000000000000)
     try {
       await officerInstance.acceptApplicant("0x0000000000000000000000000000000000000000", { from: deployerAddress });
-      console.log("Test failed: Officer was able to approve an unauthorized applicant.");
+      console.log("Test failed: Officer was able to decide an unauthorized applicant.");
     } catch (error) {
       console.log("Error message:", error.message); // Log the full error message
       // Check if the error message includes the word "revert"
       if (error.message.includes("revert")) {
-        console.log("Test passed: Officer cannot approve an unauthorized applicant.");
+        console.log("Test passed: Officer cannot decide an unauthorized applicant.");
       } else {
         console.error("Test error:", error);
       }
