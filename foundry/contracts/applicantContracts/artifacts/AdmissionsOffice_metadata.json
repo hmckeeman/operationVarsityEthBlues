@@ -1,0 +1,59 @@
+{
+	"compiler": {
+		"version": "0.8.18+commit.87f61d96"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "student",
+						"type": "address"
+					}
+				],
+				"name": "addStudent",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/studentContract.sol/Register.sol": "AdmissionsOffice"
+		},
+		"evmVersion": "paris",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/studentContract.sol/Register.sol": {
+			"keccak256": "0x1d54bd73692917eed8b4d68851d237bf59e19e790ed03184203224cff6a9112a",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://9f5f4ae56ff3ab73fdc13ec42ed4f5f9d18efe35b5395c63d88e2ee55b9c2280",
+				"dweb:/ipfs/QmSo3SRLZ75azALuYursHsnYbwJnncwcUiEVd42g6sKeVr"
+			]
+		}
+	},
+	"version": 1
+}

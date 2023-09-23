@@ -19,3 +19,5 @@ truffle-config.js
 .truffle-generated/
 .truffle/
 .secret
+node_modules
+node_modules
