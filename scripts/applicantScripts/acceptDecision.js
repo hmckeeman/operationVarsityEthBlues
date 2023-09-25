@@ -34,6 +34,12 @@ module.exports = async function(callback) {
         console.log("[3/3] Accepting the offer...");
         await applicantInstance.acceptOffer();
 
+        // Update the newStudents.json file
+        const newStudentsPath = path.join(__dirname, 'newStudents.json');
+        const newStudents = JSON.parse(fs.readFileSync(newStudentsPath, 'utf8'));
+        newStudents.push(applicantAddress);
+        fs.writeFileSync(newStudentsPath, JSON.stringify(newStudents, null, 2));
+
         console.log("Offer has been successfully accepted!");
 
         callback();
