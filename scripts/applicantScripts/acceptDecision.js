@@ -35,7 +35,7 @@ module.exports = async function(callback) {
         await applicantInstance.acceptOffer();
 
         // Update the newStudents.json fil
-        const newStudentsPath = path.join(__dirname, '../newStudents.json');
+        const newStudentsPath = path.join(__dirname, '../../newStudents.json');
         const newStudents = JSON.parse(fs.readFileSync(newStudentsPath, 'utf8'));
         newStudents.push(applicantAddress);
         fs.writeFileSync(newStudentsPath, JSON.stringify(newStudents, null, 2));
