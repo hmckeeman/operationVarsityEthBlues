@@ -9,8 +9,8 @@ module.exports = async function(callback) {
         const deployedOfficerAddresses = JSON.parse(fs.readFileSync('deployedOfficerAddresses.json', 'utf8'));
         const deployedApplicantAddresses = JSON.parse(fs.readFileSync('deployedApplicantAddresses.json', 'utf8'));
 
-        const officerAddress = "0x0f21e609c9F147871568A8636Fd1Be13E36b20fe";
-        const specificApplicantAddress = deployedApplicantAddresses[deployedApplicantAddresses.length - 1];
+        const officerAddress = "0xb8bC2068CE3996c95056B398028aDA55e346A3e5";
+        const specificApplicantAddress = "0x0C6A95362D8130A5b4eEf3276B28441a3D8cA777"; //deployedApplicantAddresses[deployedApplicantAddresses.length - 1];
         const deployerAccount = "0x93a2109C4C2AeE626722CCEC9138929d94774407";
 
         const accountToUse = accounts.find(account => account.toLowerCase() === deployerAccount.toLowerCase());

@@ -9,7 +9,7 @@ module.exports = async function(callback) {
         const deployedApplicantAddresses = JSON.parse(fs.readFileSync(deployedApplicantAddressesPath, 'utf8'));
 
         // Get the last address from the list (or whichever applicant you want to work with)
-        const applicantAddress = deployedApplicantAddresses[deployedApplicantAddresses.length - 1];
+        const applicantAddress = "0x0C6A95362D8130A5b4eEf3276B28441a3D8cA777"; //deployedApplicantAddresses[deployedApplicantAddresses.length - 1];
 
         console.log("==============================================");
         console.log("ACCEPTING OFFER FOR APPLICANT:", applicantAddress);
@@ -34,8 +34,8 @@ module.exports = async function(callback) {
         console.log("[3/3] Accepting the offer...");
         await applicantInstance.acceptOffer();
 
-        // Update the newStudents.json file
-        const newStudentsPath = path.join(__dirname, 'newStudents.json');
+        // Update the newStudents.json fil
+        const newStudentsPath = path.join(__dirname, '../newStudents.json');
         const newStudents = JSON.parse(fs.readFileSync(newStudentsPath, 'utf8'));
         newStudents.push(applicantAddress);
         fs.writeFileSync(newStudentsPath, JSON.stringify(newStudents, null, 2));

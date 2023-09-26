@@ -9,7 +9,7 @@ module.exports = async function(callback) {
     const deployedApplicantAddresses = JSON.parse(fs.readFileSync(deployedApplicantAddressesPath, 'utf8'));
 
     // Get the last address from the list
-    const applicantAddress = deployedApplicantAddresses[deployedApplicantAddresses.length - 1];
+    const applicantAddress = "0x154165aCabfC425376EeD39cF3858b340d73313e"; //deployedApplicantAddresses[deployedApplicantAddresses.length - 1];
 
     console.log("==============================================");
     console.log("VIEWING ADMISSION DECISION FOR APPLICANT:", applicantAddress);
