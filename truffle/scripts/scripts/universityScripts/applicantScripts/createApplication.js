@@ -5,7 +5,7 @@ module.exports = async function(callback) {
     try {
         const applicantName = "John Doe";
         const universityName = "MIT";
-        const ipfsLink = "QmXYZ...";
+        const ipfsLink = "https://ipfs.io/ipfs/bafybeihloosz2khq3qvqqy75hblmnwdsoe5zufotapameko76ea6v5m7oi/universityApp.jpg";
 
         const applicationInstance = await Application.deployed();
         console.log("Creating application...");
