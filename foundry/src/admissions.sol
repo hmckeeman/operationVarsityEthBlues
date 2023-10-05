@@ -197,7 +197,7 @@ contract Admissions {
     }
 
     function getRandomIndex(uint256 length) internal view returns (uint256) {
-        uint256 seed = uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender))) % length;
+        uint256 seed = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender))) % length;
         return seed;
     }
 
