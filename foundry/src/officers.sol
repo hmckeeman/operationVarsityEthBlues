@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "application.sol";
-import "admissions.sol";
-import "applicant.sol"; // Import the Applicant contract
+import "./application.sol";
+import "./admissions.sol";
+import "./applicant.sol"; // Import the Applicant contract
 
 contract Officer is IERC721Receiver {
     event OfficerDeployed(address indexed officerAddress);
