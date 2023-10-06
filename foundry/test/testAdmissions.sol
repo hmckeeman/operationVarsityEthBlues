@@ -1,9 +1,9 @@
 // Import necessary dependencies for writing tests
-import "@foundry-sh/core";
-import "hardhat/console.sol"; // Import console for debugging
-
+//import "@foundry-sh/core";
+//import "hardhat/console.sol"; // Import console for debugging
+pragma solidity ^0.8.17;
 // Import the contract you want to test
-import "./Admissions.sol";
+import "../src/admissions.sol";
 
 contract AdmissionsTest {
     Admissions admissions;
