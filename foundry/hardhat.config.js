@@ -1,9 +1,11 @@
 module.exports = {
-    solidity: "0.8.17",
-    paths: {
-      "@openzeppelin": "./node_modules/@openzeppelin",
-      "forge-std": "./node_modules/forge-std",
-      "forge-std/src/": "./node_modules/forge-std/src/",
+    settings: {
+      remappings: {
+        "eth-gas-reporter": "./node_modules/eth-gas-reporter/",
+        "hardhat": "./node_modules/hardhat/",
+        "@openzeppelin": "./node_modules/@openzeppelin/",
+        "forge-std": "./foundry/node_modules/forge-std/",
+      },
     },
   };
   
