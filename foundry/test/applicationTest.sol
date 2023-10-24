@@ -15,7 +15,7 @@ contract ApplicationTest is Test {
 
     function testCreateApplication() public {
         uint256 tokenId = application.getCurrentTokenId();
-        application.createApplication("John Doe", "Best University", "ipfs://link-to-application-data");
+        application.createApplication("John Doe", "MIT", "https://ipfs.io/ipfs/bafybeihloosz2khq3qvqqy75hblmnwdsoe5zufotapameko76ea6v5m7oi/universityApp.jpg");
         assertTrue(application.ownerOf(tokenId) == msg.sender, "Application ownership test failed.");
     }
 
