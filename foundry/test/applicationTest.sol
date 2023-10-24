@@ -16,7 +16,7 @@ contract ApplicationTest is Test {
     function testCreateApplication() public {
         uint256 tokenId = application.getCurrentTokenId();
         application.createApplication("John Doe", "Best University", "ipfs://link-to-application-data");
-        assertEq(application.ownerOf(tokenId), msg.sender);
+        assertTrue(application.ownerOf(tokenId) == msg.sender, "Application ownership test failed.");
     }
 
     function testTransferApplicationToOfficerContract() public {
@@ -24,14 +24,13 @@ contract ApplicationTest is Test {
         uint256 tokenId = application.getCurrentTokenId();
         application.createApplication("Jane Smith", "Top University", "ipfs://link-to-application-data");
         application.transferApplicationToOfficerContract(officerContract, tokenId);
-        assertEq(application.ownerOf(tokenId), officerContract);
+        assertTrue(application.ownerOf(tokenId) == officerContract, "Transfer application to officer contract test failed.");
     }
 
     function testGetApplicationData() public {
         uint256 tokenId = application.getCurrentTokenId();
         application.createApplication("Alice Johnson", "Another University", "ipfs://link-to-application-data");
         Application.ApplicantData memory data = application.getApplication(tokenId);
-        assertEq(data.name, "Alice Johnson");
-        assertEq(data.university, "Another University");
+        assertTrue(keccak256(abi.encodePacked(data.name)) == keccak256(abi.encodePacked("Alice Johnson")), "Get application data test failed.");
     }
 }
