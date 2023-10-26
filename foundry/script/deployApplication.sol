@@ -1,27 +1,26 @@
-// Import the necessary Foundry modules
-const { deploy, getContractAddress, getSigners } = require('foundry-deploy');
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
-// Import the Admissions contract
-const Admissions = require('../path-to-your-contract/Admissions.sol');
+import "forge-std/Script.sol";
+import "./Application.sol";
 
-// Define the deployment function
-async function main() {
-  const [deployer] = await getSigners();
-  
-  // Deploy the Admissions contract
-  const admissions = await deploy('Admissions', {
-    from: deployer,
-    args: [100], // Pass the constructor argument if required
-  });
+contract ApplicationScript is Script {
+    function setUp() public {}
 
-  // Get the deployed contract's address
-  const admissionsAddress = getContractAddress(admissions);
+    function run() public {
+        // Deploy the Application contract
+        Application application = new Application(msg.sender, msg.sender);
+        
+        // Create an ApplicantData struct
+        Application.ApplicantData memory newApplicant = Application.ApplicantData(
+            "John Doe",
+            "MIT",
+            "https://ipfs.io/ipfs/bafybeihloosz2khq3qvqqy75hblmnwdsoe5zufotapameko76ea6v5m7oi/universityApp.jpg"
+        );
 
-  console.log(`Admissions contract deployed at address: ${admissionsAddress}`);
+        // Create an application using the provided data
+        application.createApplication(newApplicant.name, newApplicant.university, newApplicant.ipfsLink);
+
+        // Perform any additional setup or interactions with the deployed contract here
+    }
 }
-
-// Run the deployment function
-main().catch((error) => {
-  console.error('Error deploying Admissions contract:', error);
-  process.exit(1);
-});
